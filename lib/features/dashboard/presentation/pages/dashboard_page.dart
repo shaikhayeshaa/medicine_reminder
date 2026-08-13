@@ -21,7 +21,18 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Medicine Reminder')),
+      appBar: AppBar(
+        title: const Text('Medicine Reminder'),
+        actions: [
+          IconButton(
+            tooltip: 'Manage medicines',
+            onPressed: () {
+              context.push(AppRoutes.manageMedicines);
+            },
+            icon: const Icon(Icons.medication_outlined),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.refresh(dashboardOccurrencesProvider.future);

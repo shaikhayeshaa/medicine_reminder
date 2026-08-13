@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:medicine_reminder/features/medicine/presentation/pages/edit_medicine_page.dart';
+import 'package:medicine_reminder/features/medicine/presentation/pages/medicine_management_page.dart';
 import 'package:medicine_reminder/features/reminder/presentation/pages/reminder_page.dart';
 import '../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../features/history/presentation/pages/history_page.dart';
@@ -18,6 +20,16 @@ class AppRoutes {
   static const String reminderRoute = '/reminder/:occurrenceId';
   static String reminderPath(String occurrenceId) {
     return '/reminder/${Uri.encodeComponent(occurrenceId)}';
+  }
+
+  static const String manageMedicines = '/medicines/manage';
+
+  static const String editMedicineRoute = '/medicines/:medicineId/edit';
+
+  static String editMedicinePath(String medicineId) {
+    return '/medicines/'
+        '${Uri.encodeComponent(medicineId)}'
+        '/edit';
   }
 }
 
@@ -76,6 +88,24 @@ final appRouter = GoRouter(
           ],
         ),
       ],
+    ),
+
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.manageMedicines,
+      builder: (context, state) {
+        return const MedicineManagementPage();
+      },
+    ),
+
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.editMedicineRoute,
+      builder: (context, state) {
+        final medicineId = state.pathParameters['medicineId']!;
+
+        return EditMedicinePage(medicineId: medicineId);
+      },
     ),
 
     // Outside bottom navigation shell.

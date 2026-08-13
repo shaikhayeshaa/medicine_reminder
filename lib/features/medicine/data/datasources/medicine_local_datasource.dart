@@ -119,22 +119,31 @@ class MedicineLocalDataSourceImpl implements MedicineLocalDataSource {
   ) async {
     final keysToDelete = <dynamic>[];
 
-    for (final key in _occurrencesBox.keys) {
-      final occurrence = _occurrencesBox.get(key);
+    for (final entry in _occurrencesBox.toMap().entries) {
+      final occurrence = entry.value;
 
-      if (occurrence == null) {
+      // Sirf selected medicine ki occurrences.
+      if (occurrence.medicineId != medicineId) {
         continue;
       }
 
-      final isSameMedicine = occurrence.medicineId == medicineId;
-
-      final isFuture = !occurrence.scheduledAt.isBefore(from);
-
-      final isPending = occurrence.status == DoseStatus.pending;
-
-      if (isSameMedicine && isFuture && isPending) {
-        keysToDelete.add(key);
+      // Historical records preserve karne hain.
+      // Sirf pending future occurrences delete hongi.
+      if (occurrence.status != DoseStatus.pending) {
+        continue;
       }
+
+      // Snoozed occurrence ka effective reminder time
+      // snoozedUntil hoga, otherwise scheduledAt.
+      final effectiveTime = occurrence.snoozedUntil ?? occurrence.scheduledAt;
+
+      if (!effectiveTime.isBefore(from)) {
+        keysToDelete.add(entry.key);
+      }
+    }
+
+    if (keysToDelete.isEmpty) {
+      return;
     }
 
     await _occurrencesBox.deleteAll(keysToDelete);

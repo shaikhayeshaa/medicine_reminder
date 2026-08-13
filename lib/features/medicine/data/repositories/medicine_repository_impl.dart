@@ -1,3 +1,5 @@
+import 'package:medicine_reminder/features/medicine/domain/entities/dose_status.dart';
+
 import '../../domain/entities/dose_occurrence_entity.dart';
 import '../../domain/entities/medicine_entity.dart';
 import '../../domain/repositories/medicine_repository.dart';
@@ -93,6 +95,8 @@ class MedicineRepositoryImpl implements MedicineRepository {
     String medicineId,
     DateTime from,
   ) async {
+    // Repository Hive ko directly access nahi karta.
+    // Actual deletion logic local datasource handle karega.
     await localDataSource.deleteFutureOccurrencesForMedicine(medicineId, from);
   }
 
