@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medicine_reminder/features/settings/presentation/providers/settings_providers.dart';
 import '../../domain/entities/medicine_entity.dart';
+import 'dose_occurrence_revision_provider.dart';
+import 'medicine_notifier.dart';
 import 'medicine_providers.dart';
 
 class AddMedicineController extends AsyncNotifier<void> {
@@ -41,6 +43,10 @@ class AddMedicineController extends AsyncNotifier<void> {
           // delete the medicine.
         }
       }
+
+      // Refresh shared medicine/occurrence state for Dashboard and management.
+      ref.invalidate(medicineNotifierProvider);
+      ref.read(doseOccurrenceRevisionProvider.notifier).changed();
     });
   }
 }

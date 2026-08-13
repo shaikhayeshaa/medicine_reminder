@@ -3,7 +3,7 @@ class NotificationConstants {
 
   static const String channelId = 'medicine_reminders';
 
-  static const String channelName = 'Medicine Reminders';
+  static const String channelName = 'Meditrake';
 
   static const String channelDescription =
       'Medicine dose reminder notifications';

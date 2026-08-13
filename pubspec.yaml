@@ -27,6 +27,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
 
 
   flutter_lints: ^6.0.0
@@ -37,11 +38,11 @@ flutter:
 
   assets:
     - lib/features/settings/assets/sounds/
-  #   - images/a_dot_ham.jpeg
+    - assets/icon/app_logo.png
 
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_logo.png"
+  remove_alpha_ios: true
+  background_color_ios: "#FFFFFF"

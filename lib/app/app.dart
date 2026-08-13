@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/notification_service.dart';
+import '../core/theme/app_theme.dart';
+import '../features/recovery/presentation/providers/app_recovery_provider.dart';
 import '../features/reminder/presentation/provider/notification_action_controller.dart';
 import 'router.dart';
 
@@ -13,9 +15,9 @@ class MedicineReminderApp extends ConsumerStatefulWidget {
       _MedicineReminderAppState();
 }
 
-class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp> {
+class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp>
+    with WidgetsBindingObserver {
   StreamSubscription<String>? _notificationTapSubscription;
-
   StreamSubscription<NotificationActionEvent>? _notificationActionSubscription;
 
   String? _lastHandledPayload;
@@ -25,17 +27,32 @@ class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp> {
   void initState() {
     super.initState();
 
+    WidgetsBinding.instance.addObserver(this);
     _listenForNotificationTaps();
     _listenForNotificationActions();
 
-    // Cold-start notification ko first frame ke baad handle karo.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handleInitialNotification();
       _handleInitialAction();
+
+      // Repair missed statuses, rolling occurrences and notification queue
+      // after Hive + notification plugin initialization has completed.
+      unawaited(
+        ref.read(appRecoveryControllerProvider.notifier).recover(force: true),
+      );
     });
   }
 
-  // NORMAL NOTIFICATION TAP
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      return;
+    }
+
+    // Returning from background is another opportunity to reconcile doses
+    // whose reminder time passed while Flutter was not running.
+    unawaited(ref.read(appRecoveryControllerProvider.notifier).recover());
+  }
 
   void _listenForNotificationTaps() {
     _notificationTapSubscription = NotificationService
@@ -44,17 +61,12 @@ class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp> {
         .listen(_openReminderFromNotification);
   }
 
-  // NOTIFICATION ACTIONS
-  // Taken / Snooze / Skip
-
   void _listenForNotificationActions() {
     _notificationActionSubscription = NotificationService
         .instance
         .notificationActionStream
         .listen(_handleNotificationAction);
   }
-
-  // COLD START - NORMAL NOTIFICATION TAP
 
   void _handleInitialNotification() {
     final payload = NotificationService.instance.takeInitialPayload();
@@ -66,8 +78,6 @@ class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp> {
     _openReminderFromNotification(payload);
   }
 
-  // COLD START - NOTIFICATION ACTION
-
   void _handleInitialAction() {
     final action = NotificationService.instance.takeInitialAction();
 
@@ -78,17 +88,11 @@ class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp> {
     unawaited(_handleNotificationAction(action));
   }
 
-  // HANDLE TAKEN / SKIP / SNOOZE
-
-   Future<void> _handleNotificationAction(NotificationActionEvent event) async {
-    // Taken, Skip and Snooze are all handled by
-    // the dedicated Riverpod business controller.
+  Future<void> _handleNotificationAction(NotificationActionEvent event) async {
     await ref
         .read(notificationActionControllerProvider.notifier)
         .handleAction(event);
   }
-
-  // OPEN REMINDER PAGE
 
   void _openReminderFromNotification(String occurrenceId) {
     final cleanedId = occurrenceId.trim();
@@ -97,44 +101,41 @@ class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp> {
       return;
     }
 
-    // Same callback accidentally multiple times aaye
-    // to duplicate Reminder pages open na hon.
-    final now = DateTime.now();
-
+    // Some platforms can deliver both a launch response and a foreground
+    // callback very close together. Avoid stacking the same page twice.
+    final currentTime = DateTime.now();
     final isDuplicate =
         _lastHandledPayload == cleanedId &&
         _lastHandledAt != null &&
-        now.difference(_lastHandledAt!) < const Duration(seconds: 1);
+        currentTime.difference(_lastHandledAt!) < const Duration(seconds: 1);
 
     if (isDuplicate) {
       return;
     }
 
     _lastHandledPayload = cleanedId;
-    _lastHandledAt = now;
+    _lastHandledAt = currentTime;
 
     unawaited(appRouter.push(AppRoutes.reminderPath(cleanedId)));
   }
 
-  // DISPOSE STREAMS
-
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _notificationTapSubscription?.cancel();
     _notificationActionSubscription?.cancel();
-
     super.dispose();
   }
-
-  // APP
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Medicine Reminder',
+      title: 'Meditrake',
       routerConfig: appRouter,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.teal),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
     );
   }
 }

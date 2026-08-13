@@ -1,5 +1,3 @@
-import 'package:medicine_reminder/features/medicine/domain/entities/dose_status.dart';
-
 import '../../domain/entities/dose_occurrence_entity.dart';
 import '../../domain/entities/medicine_entity.dart';
 import '../../domain/repositories/medicine_repository.dart';

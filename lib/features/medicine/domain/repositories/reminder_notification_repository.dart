@@ -18,6 +18,16 @@ abstract class ReminderNotificationRepository {
     String soundId = 'default_alarm',
   });
 
+
+  /// Repairs the operating-system queue to exactly match the desired future
+  /// occurrences. Implementations should remove stale requests and avoid
+  /// duplicate notifications.
+  Future<void> synchronizeReminders(
+    List<DoseOccurrenceEntity> occurrences, {
+    bool vibrationEnabled = true,
+    String soundId = 'default_alarm',
+  });
+
   /// Cancels one occurrence reminder.
   Future<void> cancelReminder(String occurrenceId);
 

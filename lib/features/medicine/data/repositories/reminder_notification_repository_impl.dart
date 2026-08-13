@@ -73,6 +73,39 @@ class ReminderNotificationRepositoryImpl
     }
   }
 
+
+  @override
+  Future<void> synchronizeReminders(
+    List<DoseOccurrenceEntity> occurrences, {
+    bool vibrationEnabled = true,
+    String soundId = 'default_alarm',
+  }) async {
+    final now = DateTime.now();
+
+    final desired = occurrences.where((occurrence) {
+      if (occurrence.status != DoseStatus.pending) {
+        return false;
+      }
+
+      final reminderTime =
+          occurrence.snoozedUntil ?? occurrence.scheduledAt;
+
+      return reminderTime.isAfter(now);
+    }).toList()
+      ..sort((a, b) {
+        final aTime = a.snoozedUntil ?? a.scheduledAt;
+        final bTime = b.snoozedUntil ?? b.scheduledAt;
+        return aTime.compareTo(bTime);
+      });
+
+    // Keep the queue safely below iOS' pending-local-notification ceiling.
+    await notificationService.synchronizeDoseReminders(
+      desired.take(50).toList(),
+      vibrationEnabled: vibrationEnabled,
+      soundId: soundId,
+    );
+  }
+
   @override
   Future<void> cancelReminder(
     String occurrenceId,

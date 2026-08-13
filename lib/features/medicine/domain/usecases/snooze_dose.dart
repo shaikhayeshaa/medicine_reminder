@@ -16,9 +16,14 @@ class SnoozeDoseUseCase {
     required DoseOccurrenceEntity occurrence,
     required SnoozeOption option,
   }) async {
-    if (occurrence.status != DoseStatus.pending) {
+    // A notification can be acted on a moment after its scheduled time.
+    // Recovery may already have reconciled that dose as Missed, so allow a
+    // missed dose to be snoozed back into Pending instead of rejecting the
+    // user's notification action.
+    if (occurrence.status != DoseStatus.pending &&
+        occurrence.status != DoseStatus.missed) {
       throw StateError(
-        'Only pending doses can be snoozed.',
+        'Only pending or missed doses can be snoozed.',
       );
     }
 
@@ -29,6 +34,7 @@ class SnoozeDoseUseCase {
     );
 
     final updated = occurrence.copyWith(
+      status: DoseStatus.pending,
       snoozedUntil: snoozedUntil,
     );
 

@@ -16,48 +16,40 @@ class GetHistoryOccurrencesUseCase {
   }) async {
     final occurrences = date == null
         ? await repository.getAllDoseOccurrences()
-        : await repository.getDoseOccurrencesByDate(
-            date,
-          );
+        : await repository.getDoseOccurrencesByDate(date);
 
     final currentTime = now();
-
     final result = <DoseOccurrenceEntity>[];
 
     for (final occurrence in occurrences) {
       final effectiveTime =
-          occurrence.snoozedUntil ??
-          occurrence.scheduledAt;
+          occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
       final shouldBeMissed =
-          occurrence.status ==
-                  DoseStatus.pending &&
-              effectiveTime.isBefore(
-                currentTime,
-              );
+          occurrence.status == DoseStatus.pending &&
+          effectiveTime.isBefore(currentTime);
 
       if (shouldBeMissed) {
-        final updated =
-            occurrence.copyWith(
+        final updated = occurrence.copyWith(
           status: DoseStatus.missed,
         );
 
-        await repository
-            .updateDoseOccurrence(
-          updated,
-        );
-
+        await repository.updateDoseOccurrence(updated);
         result.add(updated);
-      } else {
-        result.add(occurrence);
+        continue;
       }
+
+      // History is a record of completed/past occurrences. Future Pending
+      // doses belong on Dashboard, not in the historical timeline.
+      if (occurrence.status == DoseStatus.pending) {
+        continue;
+      }
+
+      result.add(occurrence);
     }
 
     result.sort(
-      (a, b) => b.scheduledAt
-          .compareTo(
-        a.scheduledAt,
-      ),
+      (a, b) => b.scheduledAt.compareTo(a.scheduledAt),
     );
 
     return result;

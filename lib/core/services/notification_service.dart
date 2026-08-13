@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
 import '../../features/medicine/domain/entities/dose_occurrence_entity.dart';
 import '../constants/notification_constants.dart';
 
@@ -26,35 +28,28 @@ class NotificationService {
 
   final StreamController<String> _notificationTapController =
       StreamController<String>.broadcast();
-
-  Stream<String> get notificationTapStream => _notificationTapController.stream;
-
   final StreamController<NotificationActionEvent>
   _notificationActionController =
       StreamController<NotificationActionEvent>.broadcast();
 
+  Stream<String> get notificationTapStream => _notificationTapController.stream;
+
   Stream<NotificationActionEvent> get notificationActionStream =>
       _notificationActionController.stream;
+
   String? _initialPayload;
-
-  String? get initialPayload => _initialPayload;
-
   NotificationActionEvent? _initialAction;
-
-  NotificationActionEvent? takeInitialAction() {
-    final action = _initialAction;
-
-    _initialAction = null;
-
-    return action;
-  }
 
   String? takeInitialPayload() {
     final payload = _initialPayload;
-
     _initialPayload = null;
-
     return payload;
+  }
+
+  NotificationActionEvent? takeInitialAction() {
+    final action = _initialAction;
+    _initialAction = null;
+    return action;
   }
 
   Future<void> initialize() async {
@@ -80,46 +75,49 @@ class NotificationService {
             DarwinNotificationAction.plain(
               NotificationConstants.snoozeActionId,
               'Snooze',
-              options: {DarwinNotificationActionOption.foreground},
+              options: const {DarwinNotificationActionOption.foreground},
             ),
             DarwinNotificationAction.plain(
               NotificationConstants.skipActionId,
               'Skip',
-              options: {DarwinNotificationActionOption.foreground},
+              options: const {DarwinNotificationActionOption.foreground},
             ),
           ],
         ),
       ],
     );
-    final initializationSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
 
     await _plugin.initialize(
-      settings: initializationSettings,
+      settings: InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      ),
       onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
+    // A terminated app cannot receive the foreground callback. Preserve the
+    // launch response and let MedicineReminderApp consume it after first frame.
     final launchDetails = await _plugin.getNotificationAppLaunchDetails();
 
-    if (launchDetails?.didNotificationLaunchApp == true) {
-      final response = launchDetails?.notificationResponse;
+    if (launchDetails?.didNotificationLaunchApp != true) {
+      return;
+    }
 
-      final payload = response?.payload?.trim();
+    final response = launchDetails?.notificationResponse;
+    final payload = response?.payload?.trim();
 
-      if (payload != null && payload.isNotEmpty) {
-        final actionId = response?.actionId;
+    if (payload == null || payload.isEmpty) {
+      return;
+    }
 
-        if (actionId == null || actionId.isEmpty) {
-          _initialPayload = payload;
-        } else {
-          _initialAction = NotificationActionEvent(
-            occurrenceId: payload,
-            actionId: actionId,
-          );
-        }
-      }
+    final actionId = response?.actionId;
+    if (actionId == null || actionId.isEmpty) {
+      _initialPayload = payload;
+    } else {
+      _initialAction = NotificationActionEvent(
+        occurrenceId: payload,
+        actionId: actionId,
+      );
     }
   }
 
@@ -127,9 +125,7 @@ class NotificationService {
     tz.initializeTimeZones();
 
     final timezone = await FlutterTimezone.getLocalTimezone();
-
     final location = tz.getLocation(timezone.identifier);
-
     tz.setLocalLocation(location);
   }
 
@@ -141,11 +137,8 @@ class NotificationService {
     }
 
     final actionId = response.actionId;
-
     if (actionId == null || actionId.isEmpty) {
-      // Normal notification body tap
       _notificationTapController.add(payload);
-
       return;
     }
 
@@ -161,7 +154,6 @@ class NotificationService {
         >();
 
     await androidPlugin?.requestNotificationsPermission();
-
     await androidPlugin?.requestExactAlarmsPermission();
 
     final iosPlugin = _plugin
@@ -179,42 +171,30 @@ class NotificationService {
   }) async {
     final scheduledAt = occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
-    // Never schedule reminders in the past.
+    // Never ask the OS to schedule an already expired reminder.
     if (!scheduledAt.isAfter(DateTime.now())) {
       return;
     }
 
     final notificationId = _notificationIdForOccurrence(occurrence.id);
-
     final scheduledDate = tz.TZDateTime.from(scheduledAt, tz.local);
 
-/* Android 8+ stores sound/vibration on the notification channel.
-Therefore we use a different channel id for each sound/vibration combination. 
-Reusing one channel would make later Settings changes ineffective on Android. */
-
+    // Android 8+ stores sound/vibration on notification channels. A distinct
+    // channel per preference combination allows future settings to take effect.
     final dynamicChannelId =
-        '${NotificationConstants.channelId}'
-        '_${soundId}_'
+        '${NotificationConstants.channelId}_${soundId}_'
         '${vibrationEnabled ? 'vibration' : 'no_vibration'}';
 
     final androidDetails = AndroidNotificationDetails(
       dynamicChannelId,
       NotificationConstants.channelName,
       channelDescription: NotificationConstants.channelDescription,
-
       importance: Importance.max,
       priority: Priority.high,
-
       category: AndroidNotificationCategory.alarm,
-
-      // Selected custom raw sound.
       sound: RawResourceAndroidNotificationSound(soundId),
-
       playSound: true,
-
-      // Settings-controlled vibration.
       enableVibration: vibrationEnabled,
-
       actions: const [
         AndroidNotificationAction(
           NotificationConstants.takenActionId,
@@ -241,26 +221,16 @@ Reusing one channel would make later Settings changes ineffective on Android. */
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-
-      // Native iOS bundle sound.
       sound: '$soundId.wav',
-
       categoryIdentifier: NotificationConstants.categoryId,
     );
 
-    final notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    // Inexact is our safe fallback.
     var scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-
     final canScheduleExact = await androidPlugin
         ?.canScheduleExactNotifications();
 
@@ -270,27 +240,64 @@ Reusing one channel would make later Settings changes ineffective on Android. */
 
     await _plugin.zonedSchedule(
       id: notificationId,
-      title: 'Medicine Reminder',
+      title: 'Meditrake',
       body: _buildNotificationBody(occurrence),
       scheduledDate: scheduledDate,
-      notificationDetails: notificationDetails,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      ),
       androidScheduleMode: scheduleMode,
       payload: occurrence.id,
     );
   }
-  // Android 8+ mein sound vibration notification channel behavior hota hai 
-  // aur existing channel ke behavior ko app baad mein simply change nahi kar sakti, 
-  //isliye different setting combinations ke liye distinct channel IDs use karna zaroori hai. 
-  //AndroidNotificationDetails custom sound aur vibration configuration support karta hai.
 
-  Future<void> cancelAllDoseReminders() async {
-    // Used when Notifications are disabled or when we rebuild
-    // the complete future reminder queue after Settings change.
-    await _plugin.cancelAll();
+  /// Repairs the OS queue to exactly match the rolling desired set.
+  /// Stable IDs make this safe to call after every app restart/resume.
+  Future<void> synchronizeDoseReminders(
+    List<DoseOccurrenceEntity> desiredOccurrences, {
+    bool vibrationEnabled = true,
+    String soundId = 'default_alarm',
+  }) async {
+    final desiredById = <int, DoseOccurrenceEntity>{
+      for (final occurrence in desiredOccurrences)
+        _notificationIdForOccurrence(occurrence.id): occurrence,
+    };
+
+    final pending = await _plugin.pendingNotificationRequests();
+    final validPendingIds = <int>{};
+
+    for (final request in pending) {
+      final desiredOccurrence = desiredById[request.id];
+
+      if (desiredOccurrence == null ||
+          request.payload != desiredOccurrence.id) {
+        await _plugin.cancel(id: request.id);
+        continue;
+      }
+
+      validPendingIds.add(request.id);
+    }
+
+    for (final entry in desiredById.entries) {
+      if (validPendingIds.contains(entry.key)) {
+        continue;
+      }
+
+      await scheduleDoseReminder(
+        entry.value,
+        vibrationEnabled: vibrationEnabled,
+        soundId: soundId,
+      );
+    }
   }
 
-  Future<void> cancelDoseReminder(String occurrenceId) async {
-    await _plugin.cancel(id: _notificationIdForOccurrence(occurrenceId));
+  Future<void> cancelAllDoseReminders() {
+    return _plugin.cancelAll();
+  }
+
+  Future<void> cancelDoseReminder(String occurrenceId) {
+    return _plugin.cancel(id: _notificationIdForOccurrence(occurrenceId));
   }
 
   Future<List<PendingNotificationRequest>> getPendingNotifications() {
@@ -300,8 +307,7 @@ Reusing one channel would make later Settings changes ineffective on Android. */
   String _buildNotificationBody(DoseOccurrenceEntity occurrence) {
     return '${occurrence.medicineName}\n'
         '${occurrence.medicineStrength} • '
-        '${_formatQuantity(occurrence.quantity)} '
-        '${occurrence.unit}\n'
+        '${_formatQuantity(occurrence.quantity)} ${occurrence.unit}\n'
         '${occurrence.foodInstruction}';
   }
 
@@ -309,7 +315,6 @@ Reusing one channel would make later Settings changes ineffective on Android. */
     if (quantity == quantity.roundToDouble()) {
       return quantity.toInt().toString();
     }
-
     return quantity.toString();
   }
 

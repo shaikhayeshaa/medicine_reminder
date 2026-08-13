@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:medicine_reminder/features/reminder/presentation/provider/dose_action_controller.dart';
-import 'package:medicine_reminder/features/reminder/presentation/provider/reminder_occurrence_provider.dart';
+
+import '../../../../core/presentation/widgets/app_background.dart';
+import '../../../../core/presentation/widgets/glass_surface.dart';
+import '../../../../core/presentation/widgets/status_badge.dart';
 import '../../../medicine/domain/entities/dose_occurrence_entity.dart';
 import '../../../medicine/domain/entities/dose_status.dart';
 import '../../../medicine/domain/entities/snooze_option.dart';
-
+import '../provider/dose_action_controller.dart';
+import '../provider/reminder_occurrence_provider.dart';
 
 class ReminderPage extends ConsumerWidget {
   final String occurrenceId;
@@ -18,17 +21,12 @@ class ReminderPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<AsyncValue<void>>(
       doseActionControllerProvider,
       (previous, next) {
-        if (previous?.isLoading == true &&
-            next.hasError) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
+        if (previous?.isLoading == true && next.hasError) {
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 'Unable to update dose: ${next.error}',
@@ -40,259 +38,233 @@ class ReminderPage extends ConsumerWidget {
     );
 
     final occurrenceAsync = ref.watch(
-      reminderOccurrenceProvider(
-        occurrenceId,
-      ),
+      reminderOccurrenceProvider(occurrenceId),
     );
 
-    return occurrenceAsync.when(
-      loading: () {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'Medicine Reminder',
-            ),
-          ),
-          body: const Center(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBody: true,
+      body: AppBackground(
+        child: occurrenceAsync.when(
+          loading: () => const Center(
             child: CircularProgressIndicator(),
           ),
-        );
-      },
-
-      error: (error, stackTrace) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'Medicine Reminder',
-            ),
+          error: (error, stackTrace) => _MessageState(
+            title: 'Unable to load reminder',
+            actionLabel: 'Try again',
+            onAction: () {
+              ref.invalidate(
+                reminderOccurrenceProvider(occurrenceId),
+              );
+            },
           ),
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+          data: (occurrence) {
+            if (occurrence == null) {
+              return _MessageState(
+                title: 'Reminder not found',
+                actionLabel: 'Go back',
+                onAction: context.pop,
+              );
+            }
+
+            return SafeArea(
+              bottom: false,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  18,
+                  12,
+                  18,
+                  165,
+                ),
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  const Text(
-                    'Unable to load reminder.',
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  FilledButton(
-                    onPressed: () {
-                      ref.invalidate(
-                        reminderOccurrenceProvider(
-                          occurrenceId,
+                  Row(
+                    children: [
+                      IconButton.filledTonal(
+                        tooltip: 'Back',
+                        onPressed: context.pop,
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
                         ),
-                      );
-                    },
-                    child: const Text(
-                      'Try Again',
-                    ),
+                      ),
+                      const Spacer(),
+                      StatusBadge(status: occurrence.status),
+                    ],
                   ),
+                  const SizedBox(height: 24),
+                  _ReminderHero(occurrence: occurrence),
+                  const SizedBox(height: 18),
+                  _DetailsCard(occurrence: occurrence),
                 ],
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
+      bottomNavigationBar: occurrenceAsync.maybeWhen(
+        data: (occurrence) {
+          if (occurrence == null) {
+            return null;
+          }
 
-      data: (occurrence) {
-        if (occurrence == null) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text(
-                'Medicine Reminder',
-              ),
-            ),
-            body: const Center(
-              child: Text(
-                'Reminder not found.',
-              ),
-            ),
-          );
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'Medicine Reminder',
-            ),
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                120,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(
-                    maxWidth: 650,
-                  ),
-                  child: _ReminderContent(
-                    occurrence: occurrence,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          bottomNavigationBar:
-              _DoseActionBar(
-            occurrence: occurrence,
-          ),
-        );
-      },
+          return _DoseActionBar(occurrence: occurrence);
+        },
+        orElse: () => null,
+      ),
     );
   }
 }
 
-class _ReminderContent extends StatelessWidget {
+class _ReminderHero extends StatelessWidget {
   final DoseOccurrenceEntity occurrence;
 
-  const _ReminderContent({
-    required this.occurrence,
-  });
+  const _ReminderHero({required this.occurrence});
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final quantity = occurrence.quantity ==
+            occurrence.quantity.roundToDouble()
+        ? occurrence.quantity.toInt().toString()
+        : occurrence.quantity.toString();
+
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.stretch,
       children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const CircleAvatar(
-                  radius: 32,
-                  child: Icon(
-                    Icons.medication_outlined,
-                    size: 32,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                Text(
-                  occurrence.medicineName,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall,
-                ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  occurrence.medicineStrength,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium,
-                ),
-
-                const SizedBox(height: 16),
-
-                _StatusChip(
-                  status: occurrence.status,
-                ),
+        Container(
+          width: 92,
+          height: 92,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                scheme.primary,
+                scheme.secondary,
               ],
             ),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withValues(alpha: 0.24),
+                blurRadius: 36,
+                offset: const Offset(0, 16),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.medication_liquid_rounded,
+            size: 44,
+            color: scheme.onPrimary,
           ),
         ),
-
+        const SizedBox(height: 20),
+        Text(
+          'Medicine Reminder',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          occurrence.medicineName,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 7),
+        Text(
+          '${occurrence.medicineStrength} • '
+          '$quantity ${occurrence.unit}',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+        ),
         const SizedBox(height: 16),
-
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _DetailRow(
-                  icon: Icons.schedule_outlined,
-                  label: 'Scheduled time',
-                  value: DateFormat(
-                    'hh:mm a',
-                  ).format(
-                    occurrence.scheduledAt,
-                  ),
-                ),
-
-                const Divider(),
-
-                _DetailRow(
-                  icon: Icons.medication_outlined,
-                  label: 'Dose',
-                  value:
-                      '${occurrence.quantity} '
-                      '${occurrence.unit}',
-                ),
-
-                const Divider(),
-
-                _DetailRow(
-                  icon:
-                      Icons.restaurant_outlined,
-                  label: 'Food instruction',
-                  value:
-                      occurrence.foodInstruction,
-                ),
-
-                const Divider(),
-
-                _DetailRow(
-                  icon: Icons.category_outlined,
-                  label: 'Type',
-                  value:
-                      occurrence.medicineType,
-                ),
-
-                if (occurrence
-                    .medicineDescription
-                    .isNotEmpty) ...[
-                  const Divider(),
-
-                  _DetailRow(
-                    icon:
-                        Icons.description_outlined,
-                    label: 'Description',
-                    value: occurrence
-                        .medicineDescription,
-                  ),
-                ],
-
-                if (occurrence.snoozedUntil !=
-                    null) ...[
-                  const Divider(),
-
-                  _DetailRow(
-                    icon:
-                        Icons.snooze_outlined,
-                    label: 'Snoozed until',
-                    value: DateFormat(
-                      'hh:mm a',
-                    ).format(
-                      occurrence
-                          .snoozedUntil!,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+        Text(
+          DateFormat('hh:mm a').format(occurrence.scheduledAt),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: scheme.primary,
+              ),
         ),
+        if (occurrence.snoozedUntil != null) ...[
+          const SizedBox(height: 7),
+          Text(
+            'Snoozed until '
+            '${DateFormat('hh:mm a').format(occurrence.snoozedUntil!)}',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+        ],
       ],
+    );
+  }
+}
+
+class _DetailsCard extends StatelessWidget {
+  final DoseOccurrenceEntity occurrence;
+
+  const _DetailsCard({required this.occurrence});
+
+  @override
+  Widget build(BuildContext context) {
+    final quantity = occurrence.quantity ==
+            occurrence.quantity.roundToDouble()
+        ? occurrence.quantity.toInt().toString()
+        : occurrence.quantity.toString();
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context)
+            .colorScheme
+            .surface
+            .withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: Theme.of(context)
+              .colorScheme
+              .outlineVariant
+              .withValues(alpha: 0.45),
+        ),
+      ),
+      child: Column(
+        children: [
+          _DetailRow(
+            icon: Icons.medical_information_outlined,
+            label: 'Type',
+            value: occurrence.medicineType,
+          ),
+          const Divider(height: 26),
+          _DetailRow(
+            icon: Icons.medication_outlined,
+            label: 'Dose',
+            value: '$quantity ${occurrence.unit}',
+          ),
+          const Divider(height: 26),
+          _DetailRow(
+            icon: Icons.restaurant_rounded,
+            label: 'Food instruction',
+            value: occurrence.foodInstruction.isEmpty
+                ? 'No special instruction'
+                : occurrence.foodInstruction,
+          ),
+          if (occurrence.medicineDescription.isNotEmpty) ...[
+            const Divider(height: 26),
+            _DetailRow(
+              icon: Icons.notes_rounded,
+              label: 'Description',
+              value: occurrence.medicineDescription,
+            ),
+          ],
+          if (occurrence.actionAt != null) ...[
+            const Divider(height: 26),
+            _DetailRow(
+              icon: Icons.task_alt_rounded,
+              label: 'Action time',
+              value: DateFormat('dd MMM • hh:mm a')
+                  .format(occurrence.actionAt!),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -310,84 +282,36 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 8,
-      ),
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            size: 22,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 21,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 3),
+              Text(value),
+            ],
           ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelMedium,
-                ),
-
-                const SizedBox(height: 2),
-
-                Text(
-                  value,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final DoseStatus status;
-
-  const _StatusChip({
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, icon) = switch (status) {
-      DoseStatus.pending => (
-          'Pending',
-          Icons.schedule_outlined,
         ),
-      DoseStatus.taken => (
-          'Taken',
-          Icons.check_circle_outline,
-        ),
-      DoseStatus.missed => (
-          'Missed',
-          Icons.cancel_outlined,
-        ),
-      DoseStatus.skipped => (
-          'Skipped',
-          Icons.skip_next_outlined,
-        ),
-    };
-
-    return Chip(
-      avatar: Icon(
-        icon,
-        size: 18,
-      ),
-      label: Text(label),
+      ],
     );
   }
 }
@@ -395,24 +319,16 @@ class _StatusChip extends StatelessWidget {
 class _DoseActionBar extends ConsumerWidget {
   final DoseOccurrenceEntity occurrence;
 
-  const _DoseActionBar({
-    required this.occurrence,
-  });
+  const _DoseActionBar({required this.occurrence});
 
   Future<void> _markTaken(
     BuildContext context,
     WidgetRef ref,
   ) async {
     await ref
-        .read(
-          doseActionControllerProvider.notifier,
-        )
+        .read(doseActionControllerProvider.notifier)
         .markTaken(occurrence);
-
-    _closeOnSuccess(
-      context,
-      ref,
-    );
+    _closeOnSuccess(context, ref);
   }
 
   Future<void> _skip(
@@ -420,53 +336,33 @@ class _DoseActionBar extends ConsumerWidget {
     WidgetRef ref,
   ) async {
     await ref
-        .read(
-          doseActionControllerProvider.notifier,
-        )
+        .read(doseActionControllerProvider.notifier)
         .skip(occurrence);
-
-    _closeOnSuccess(
-      context,
-      ref,
-    );
+    _closeOnSuccess(context, ref);
   }
 
   Future<void> _snooze(
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final option =
-        await showModalBottomSheet<
-            SnoozeOption>(
+    final option = await showModalBottomSheet<SnoozeOption>(
       context: context,
       showDragHandle: true,
-      builder: (context) {
-        return const _SnoozeSheet();
-      },
+      builder: (context) => const _SnoozeSheet(),
     );
 
-    if (option == null ||
-        !context.mounted) {
+    if (option == null || !context.mounted) {
       return;
     }
 
     await ref
-        .read(
-          doseActionControllerProvider.notifier,
-        )
+        .read(doseActionControllerProvider.notifier)
         .snooze(
           occurrence: occurrence,
           option: option,
         );
 
-    if (!context.mounted) {
-      return;
-    }
-
-    _closeOnSuccess(
-      context,
-      ref,
-    );
+    _closeOnSuccess(context, ref);
   }
 
   void _closeOnSuccess(
@@ -477,97 +373,63 @@ class _DoseActionBar extends ConsumerWidget {
       return;
     }
 
-    final actionState = ref.read(
-      doseActionControllerProvider,
-    );
-
-    if (!actionState.hasError) {
-      context.pop();
+    final result = ref.read(doseActionControllerProvider);
+    if (!result.hasError) {
+      context.pop(true);
     }
   }
 
   @override
-  Widget build(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(
       doseActionControllerProvider.select(
         (state) => state.isLoading,
       ),
     );
 
-    if (occurrence.status !=
-        DoseStatus.pending) {
-      return SafeArea(
-        minimum: const EdgeInsets.all(16),
-        child: Text(
-          'This dose is already '
-          '${occurrence.status.name}.',
-          textAlign: TextAlign.center,
-        ),
-      );
-    }
-
     return SafeArea(
-      minimum: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: FilledButton.icon(
-              onPressed: isLoading
-                  ? null
-                  : () => _markTaken(
-                        context,
-                        ref,
-                      ),
-              icon: const Icon(
-                Icons.check,
+      minimum: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+      child: GlassSurface(
+        borderRadius: BorderRadius.circular(28),
+        padding: const EdgeInsets.all(10),
+        child: occurrence.status != DoseStatus.pending &&
+                occurrence.status != DoseStatus.missed
+            ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  'This dose is already ${occurrence.status.name}.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: isLoading
+                          ? null
+                          : () => _markTaken(context, ref),
+                      icon: const Icon(Icons.check_rounded),
+                      label: const Text('Taken'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    tooltip: 'Snooze',
+                    onPressed: isLoading
+                        ? null
+                        : () => _snooze(context, ref),
+                    icon: const Icon(Icons.snooze_rounded),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    tooltip: 'Skip',
+                    onPressed:
+                        isLoading ? null : () => _skip(context, ref),
+                    icon: const Icon(Icons.skip_next_rounded),
+                  ),
+                ],
               ),
-              label: const Text(
-                'Taken',
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: isLoading
-                  ? null
-                  : () => _snooze(
-                        context,
-                        ref,
-                      ),
-              icon: const Icon(
-                Icons.snooze,
-              ),
-              label: const Text(
-                'Snooze',
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: isLoading
-                  ? null
-                  : () => _skip(
-                        context,
-                        ref,
-                      ),
-              icon: const Icon(
-                Icons.skip_next,
-              ),
-              label: const Text(
-                'Skip',
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -580,42 +442,78 @@ class _SnoozeSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          0,
-          16,
-          24,
-        ),
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 22),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment:
-              CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               'Snooze reminder',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 5),
+            Text(
+              'Only this dose will move. Your medicine schedule stays unchanged.',
               style: Theme.of(context)
                   .textTheme
-                  .titleLarge,
+                  .bodyMedium
+                  ?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
+                  ),
             ),
-
             const SizedBox(height: 12),
-
-            for (final option
-                in SnoozeOption.values)
+            for (final option in SnoozeOption.values)
               ListTile(
-                leading: const Icon(
-                  Icons.snooze,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                title: Text(
-                  '${option.minutes} minutes',
-                ),
-                onTap: () {
-                  Navigator.of(context).pop(
-                    option,
-                  );
-                },
+                leading: const Icon(Icons.snooze_rounded),
+                title: Text('${option.minutes} minutes'),
+                onTap: () => Navigator.of(context).pop(option),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MessageState extends StatelessWidget {
+  final String title;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _MessageState({
+    required this.title,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.medication_outlined, size: 54),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 14),
+              FilledButton(
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ],
+          ),
         ),
       ),
     );

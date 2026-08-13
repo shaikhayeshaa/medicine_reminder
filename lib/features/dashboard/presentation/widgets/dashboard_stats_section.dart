@@ -4,66 +4,96 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/dashboard_stats.dart';
 import '../providers/dashboard_stats_provider.dart';
 
-class DashboardStatsSection
-    extends ConsumerWidget {
-  const DashboardStatsSection({
-    super.key,
-  });
+class DashboardStatsSection extends ConsumerWidget {
+  const DashboardStatsSection({super.key});
 
   @override
-  Widget build(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
-    final statsAsync = ref.watch(
-      dashboardStatsProvider,
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(dashboardStatsProvider);
 
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Daily Overview',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge,
+          'Daily overview',
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-
-        const SizedBox(height: 12),
-
-        statsAsync.when(
-          loading: () =>
-              const LinearProgressIndicator(),
-
-          error: (error, stackTrace) {
-            return Card(
-              child: Padding(
-                padding:
-                    const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Unable to load daily statistics.',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
+        const SizedBox(height: 4),
+        Text(
+          'A quick view of today\'s individual dose occurrences.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-            );
-          },
+        ),
+        const SizedBox(height: 14),
+        statsAsync.when(
+          loading: () => const LinearProgressIndicator(),
+          error: (error, stackTrace) => const _StatsError(),
+          data: (stats) => _StatsGrid(stats: stats),
+        ),
+      ],
+    );
+  }
+}
 
-          data: (stats) {
-            return _StatsList(
-              stats: stats,
+/// A fixed, responsive summary that never requires horizontal scrolling.
+///
+/// Total gets a full-width summary card, while the four actionable statuses
+/// are shown in a compact 2 x 2 grid. This is easier to scan with one hand on
+/// small phones and still scales cleanly on wider Android/iOS devices.
+class _StatsGrid extends StatelessWidget {
+  final DashboardStats stats;
+
+  const _StatsGrid({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _StatData(
+        'Pending',
+        stats.pending,
+        Icons.schedule_rounded,
+        const Color(0xFFF59E0B),
+      ),
+      _StatData(
+        'Taken',
+        stats.taken,
+        Icons.check_circle_rounded,
+        const Color(0xFF16A36A),
+      ),
+      _StatData(
+        'Missed',
+        stats.missed,
+        Icons.error_rounded,
+        const Color(0xFFEF5A5A),
+      ),
+      _StatData(
+        'Skipped',
+        stats.skipped,
+        Icons.skip_next_rounded,
+        const Color(0xFF7C6BEF),
+      ),
+    ];
+
+    return Column(
+      children: [
+        _TotalDoseCard(total: stats.total),
+        const SizedBox(height: 10),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final gap = 10.0;
+            final itemWidth = (constraints.maxWidth - gap) / 2;
+
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final item in items)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _StatusStatCard(item: item),
+                  ),
+              ],
             );
           },
         ),
@@ -72,50 +102,64 @@ class DashboardStatsSection
   }
 }
 
-class _StatsList extends StatelessWidget {
-  final DashboardStats stats;
+class _TotalDoseCard extends StatelessWidget {
+  final int total;
 
-  const _StatsList({
-    required this.stats,
-  });
+  const _TotalDoseCard({required this.total});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 105,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: 16,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            scheme.primary.withValues(alpha: 0.16),
+            scheme.secondary.withValues(alpha: 0.10),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
         children: [
-          _StatCard(
-            label: 'Total',
-            count: stats.total,
-            icon: Icons.medication_outlined,
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.medication_rounded,
+              color: scheme.primary,
+            ),
           ),
-
-          _StatCard(
-            label: 'Pending',
-            count: stats.pending,
-            icon: Icons.schedule_outlined,
-          ),
-
-          _StatCard(
-            label: 'Taken',
-            count: stats.taken,
-            icon:
-                Icons.check_circle_outline,
-          ),
-
-          _StatCard(
-            label: 'Missed',
-            count: stats.missed,
-            icon: Icons.cancel_outlined,
-          ),
-
-          _StatCard(
-            label: 'Skipped',
-            count: stats.skipped,
-            icon:
-                Icons.skip_next_outlined,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$total',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                Text(
+                  'Total doses scheduled',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -123,51 +167,103 @@ class _StatsList extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String label;
-  final int count;
-  final IconData icon;
+class _StatusStatCard extends StatelessWidget {
+  final _StatData item;
 
-  const _StatCard({
-    required this.label,
-    required this.count,
-    required this.icon,
-  });
+  const _StatusStatCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 98),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.surface.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.42),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: item.color.withValues(alpha: 0.11),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              item.icon,
+              color: item.color,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${item.value}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatData {
+  final String label;
+  final int value;
+  final IconData icon;
+  final Color color;
+
+  const _StatData(
+    this.label,
+    this.value,
+    this.icon,
+    this.color,
+  );
+}
+
+class _StatsError extends StatelessWidget {
+  const _StatsError();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 112,
-      margin: const EdgeInsets.only(
-        right: 10,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              Icon(icon),
-
-              const Spacer(),
-
-              Text(
-                count.toString(),
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall,
-              ),
-
-              Text(
-                label,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall,
-              ),
-            ],
+      child: const Row(
+        children: [
+          Icon(Icons.error_outline_rounded),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Unable to load daily statistics.',
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

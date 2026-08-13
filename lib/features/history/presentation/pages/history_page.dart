@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
+import '../../../../core/presentation/widgets/app_background.dart';
+import '../../../../core/presentation/widgets/glass_surface.dart';
+import '../../../../core/presentation/widgets/page_header.dart';
+import '../../../../core/presentation/widgets/status_badge.dart';
 import '../../../medicine/domain/entities/dose_occurrence_entity.dart';
-import '../../../medicine/domain/entities/dose_status.dart';
 import '../../domain/entities/history_status_filter.dart';
 import '../providers/history_providers.dart';
 
@@ -14,103 +18,112 @@ class HistoryPage extends ConsumerStatefulWidget {
 }
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
-  final TextEditingController _searchController = TextEditingController();
-
-  final ValueNotifier<String> _searchQuery = ValueNotifier<String>('');
+  final TextEditingController _searchController =
+      TextEditingController();
+  final ValueNotifier<String> _searchQuery =
+      ValueNotifier<String>('');
 
   @override
   void initState() {
     super.initState();
-
     _searchController.addListener(_onSearchChanged);
   }
 
   void _onSearchChanged() {
-    _searchQuery.value = _searchController.text.trim().toLowerCase();
+    _searchQuery.value =
+        _searchController.text.trim().toLowerCase();
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
-
     _searchController.dispose();
     _searchQuery.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(historyOccurrencesProvider);
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
+          bottom: false,
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(historyOccurrencesProvider);
+              await ref.read(historyOccurrencesProvider.future);
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(18, 18, 18, 0),
+                    child: PageHeader(
+                      eyebrow: 'Dose timeline',
+                      title: 'History',
+                      subtitle:
+                          'Review exactly what happened with every dose.',
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 22, 18, 0),
+                    child: GlassSurface(
+                      borderRadius: BorderRadius.circular(20),
+                      child: TextField(
+                        controller: _searchController,
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          hintText: 'Search medicine, type or description',
+                          prefixIcon:
+                              const Icon(Icons.search_rounded),
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          suffixIcon:
+                              ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: _searchController,
+                            builder: (context, value, child) {
+                              if (value.text.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
 
-          await ref.read(historyOccurrencesProvider.future);
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: _SearchField(controller: _searchController),
-              ),
+                              return IconButton(
+                                tooltip: 'Clear search',
+                                onPressed: _searchController.clear,
+                                icon: const Icon(Icons.close_rounded),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(18, 12, 18, 0),
+                    child: _HistoryDateFilter(),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(18, 12, 18, 8),
+                    child: _StatusFilters(),
+                  ),
+                ),
+                _HistoryList(searchQuery: _searchQuery),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 130),
+                ),
+              ],
             ),
-
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: _HistoryDateFilter(),
-              ),
-            ),
-
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: _StatusFilters(),
-              ),
-            ),
-
-            _HistoryList(searchQuery: _searchQuery),
-          ],
+          ),
         ),
-      ),
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _SearchField({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: 'Search medicine...',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: controller,
-          builder: (context, value, child) {
-            if (value.text.isEmpty) {
-              return const SizedBox.shrink();
-            }
-
-            return IconButton(
-              tooltip: 'Clear search',
-              onPressed: () {
-                controller.clear();
-              },
-              icon: const Icon(Icons.close),
-            );
-          },
-        ),
-        border: const OutlineInputBorder(),
       ),
     );
   }
@@ -126,41 +139,52 @@ class _HistoryDateFilter extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () async {
-              final initialDate = selectedDate ?? DateTime.now();
-
+          child: GlassSurface(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () async {
               final date = await showDatePicker(
                 context: context,
-                initialDate: initialDate,
+                initialDate: selectedDate ?? DateTime.now(),
                 firstDate: DateTime(2020),
                 lastDate: DateTime(2100),
               );
 
-              if (date == null) {
-                return;
+              if (date != null) {
+                ref
+                    .read(historyDateProvider.notifier)
+                    .selectDate(date);
               }
-
-              ref.read(historyDateProvider.notifier).selectDate(date);
             },
-            icon: const Icon(Icons.calendar_month_outlined),
-            label: Text(
-              selectedDate == null
-                  ? 'All Dates'
-                  : DateFormat('dd MMM yyyy').format(selectedDate),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month_rounded, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    selectedDate == null
+                        ? 'All dates'
+                        : DateFormat('dd MMM yyyy')
+                            .format(selectedDate),
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down_rounded),
+              ],
             ),
           ),
         ),
-
         if (selectedDate != null) ...[
           const SizedBox(width: 8),
-
-          IconButton(
+          IconButton.filledTonal(
             tooltip: 'Clear date filter',
             onPressed: () {
               ref.read(historyDateProvider.notifier).clear();
             },
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close_rounded),
           ),
         ],
       ],
@@ -175,60 +199,28 @@ class _StatusFilters extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(historyStatusFilterProvider);
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _FilterChip(
-            label: 'All',
-            value: HistoryStatusFilter.all,
-            selected: selected,
+    // Wrap keeps every status visible without forcing a horizontal swipe.
+    // On narrow phones the chips naturally move to the next line.
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final item in const [
+          (HistoryStatusFilter.all, 'All'),
+          (HistoryStatusFilter.taken, 'Taken'),
+          (HistoryStatusFilter.missed, 'Missed'),
+          (HistoryStatusFilter.skipped, 'Skipped'),
+        ])
+          ChoiceChip(
+            label: Text(item.$2),
+            selected: selected == item.$1,
+            onSelected: (_) {
+              ref
+                  .read(historyStatusFilterProvider.notifier)
+                  .select(item.$1);
+            },
           ),
-          _FilterChip(
-            label: 'Taken',
-            value: HistoryStatusFilter.taken,
-            selected: selected,
-          ),
-          _FilterChip(
-            label: 'Missed',
-            value: HistoryStatusFilter.missed,
-            selected: selected,
-          ),
-          _FilterChip(
-            label: 'Skipped',
-            value: HistoryStatusFilter.skipped,
-            selected: selected,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends ConsumerWidget {
-  final String label;
-
-  final HistoryStatusFilter value;
-
-  final HistoryStatusFilter selected;
-
-  const _FilterChip({
-    required this.label,
-    required this.value,
-    required this.selected,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected == value,
-        onSelected: (_) {
-          ref.read(historyStatusFilterProvider.notifier).select(value);
-        },
-      ),
+      ],
     );
   }
 }
@@ -240,42 +232,26 @@ class _HistoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final occurrencesAsync = ref.watch(historyStatusFilteredProvider);
+    final occurrencesAsync =
+        ref.watch(historyStatusFilteredProvider);
 
     return occurrencesAsync.when(
-      loading: () {
-        return const SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(child: CircularProgressIndicator()),
-        );
-      },
-
-      error: (error, stackTrace) {
-        return SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, size: 48),
-                  const SizedBox(height: 12),
-                  const Text('Unable to load history.'),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () {
-                      ref.invalidate(historyOccurrencesProvider);
-                    },
-                    child: const Text('Try Again'),
-                  ),
-                ],
-              ),
-            ),
+      loading: () => const SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stackTrace) => SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: FilledButton.icon(
+            onPressed: () {
+              ref.invalidate(historyOccurrencesProvider);
+            },
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry history'),
           ),
-        );
-      },
-
+        ),
+      ),
       data: (occurrences) {
         return ValueListenableBuilder<String>(
           valueListenable: searchQuery,
@@ -285,11 +261,15 @@ class _HistoryList extends ConsumerWidget {
                 return true;
               }
 
-              return occurrence.medicineName.toLowerCase().contains(query) ||
-                  occurrence.medicineDescription.toLowerCase().contains(
-                    query,
-                  ) ||
-                  occurrence.medicineType.toLowerCase().contains(query);
+              return occurrence.medicineName
+                      .toLowerCase()
+                      .contains(query) ||
+                  occurrence.medicineDescription
+                      .toLowerCase()
+                      .contains(query) ||
+                  occurrence.medicineType
+                      .toLowerCase()
+                      .contains(query);
             }).toList();
 
             if (filtered.isEmpty) {
@@ -300,25 +280,27 @@ class _HistoryList extends ConsumerWidget {
             }
 
             return SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 0),
               sliver: SliverList.builder(
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   final occurrence = filtered[index];
-
-                  final previous = index == 0 ? null : filtered[index - 1];
-
-                  final showDateHeader =
-                      previous == null ||
-                      !_sameDay(previous.scheduledAt, occurrence.scheduledAt);
+                  final previous =
+                      index == 0 ? null : filtered[index - 1];
+                  final showDateHeader = previous == null ||
+                      !_sameDay(
+                        previous.scheduledAt,
+                        occurrence.scheduledAt,
+                      );
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (showDateHeader)
                         _DateHeader(date: occurrence.scheduledAt),
-
-                      _HistoryOccurrenceCard(occurrence: occurrence),
+                      _HistoryOccurrenceCard(
+                        occurrence: occurrence,
+                      ),
                     ],
                   );
                 },
@@ -345,7 +327,7 @@ class _DateHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 8),
+      padding: const EdgeInsets.only(top: 18, bottom: 9),
       child: Text(
         DateFormat('EEEE, dd MMM yyyy').format(date),
         style: Theme.of(context).textTheme.titleMedium,
@@ -361,94 +343,74 @@ class _HistoryOccurrenceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final scheme = Theme.of(context).colorScheme;
+    final quantity = occurrence.quantity ==
+            occurrence.quantity.roundToDouble()
+        ? occurrence.quantity.toInt().toString()
+        : occurrence.quantity.toString();
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 75,
-              child: Text(
-                DateFormat('hh:mm a').format(occurrence.scheduledAt),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    occurrence.medicineName,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    '${occurrence.medicineStrength}'
-                    ' • '
-                    '${_quantityText(occurrence.quantity)} '
-                    '${occurrence.unit}',
-                  ),
-
-                  if (occurrence.foodInstruction.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(occurrence.foodInstruction),
-                  ],
-
-                  if (occurrence.actionAt != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Action: '
-                      '${DateFormat('hh:mm a').format(occurrence.actionAt!)}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            _HistoryStatusChip(status: occurrence.status),
-          ],
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
         ),
       ),
-    );
-  }
-
-  String _quantityText(double quantity) {
-    if (quantity == quantity.roundToDouble()) {
-      return quantity.toInt().toString();
-    }
-
-    return quantity.toString();
-  }
-}
-
-class _HistoryStatusChip extends StatelessWidget {
-  final DoseStatus status;
-
-  const _HistoryStatusChip({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, icon) = switch (status) {
-      DoseStatus.pending => ('Pending', Icons.schedule),
-      DoseStatus.taken => ('Taken', Icons.check_circle),
-      DoseStatus.missed => ('Missed', Icons.cancel),
-      DoseStatus.skipped => ('Skipped', Icons.skip_next),
-    };
-
-    return Chip(
-      avatar: Icon(icon, size: 17),
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 66,
+            child: Text(
+              DateFormat('hh:mm a').format(occurrence.scheduledAt),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  occurrence.medicineName,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${occurrence.medicineStrength} • '
+                  '$quantity ${occurrence.unit}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+                if (occurrence.foodInstruction.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    occurrence.foodInstruction,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                if (occurrence.actionAt != null) ...[
+                  const SizedBox(height: 7),
+                  Text(
+                    'Action at ${DateFormat('hh:mm a').format(occurrence.actionAt!)}',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          StatusBadge(status: occurrence.status),
+        ],
+      ),
     );
   }
 }
@@ -465,19 +427,27 @@ class _HistoryEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.history,
-              size: 56,
-              color: Theme.of(context).colorScheme.outline,
+              Icons.history_toggle_off_rounded,
+              size: 58,
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 16),
             Text(
-              'No history found',
+              'No matching history',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Try changing the search, date, or status filter.',
+            Text(
+              'Try another date, status, or search term.',
               textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
+                  ),
             ),
           ],
         ),
