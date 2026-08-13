@@ -240,7 +240,7 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       id: notificationId,
-      title: 'Meditrake',
+      title: 'MediTrack',
       body: _buildNotificationBody(occurrence),
       scheduledDate: scheduledDate,
       notificationDetails: NotificationDetails(

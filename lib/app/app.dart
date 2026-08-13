@@ -131,7 +131,7 @@ class _MedicineReminderAppState extends ConsumerState<MedicineReminderApp>
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Meditrake',
+      title: 'MediTrack',
       routerConfig: appRouter,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
