@@ -45,7 +45,6 @@ class HiveService {
   }
 }
 
-
 // Medicine          typeId = 0
 // Dose              typeId = 1
 // DoseOccurrence    typeId = 2

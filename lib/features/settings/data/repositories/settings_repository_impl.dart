@@ -6,9 +6,7 @@ import '../models/settings_model.dart';
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDataSource localDataSource;
 
-  SettingsRepositoryImpl({
-    required this.localDataSource,
-  });
+  SettingsRepositoryImpl({required this.localDataSource});
 
   @override
   Future<SettingsEntity> getSettings() async {
@@ -18,8 +16,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<void> saveSettings(SettingsEntity settings) async {
-    await localDataSource.saveSettings(
-      SettingsModel.fromEntity(settings),
-    );
+    await localDataSource.saveSettings(SettingsModel.fromEntity(settings));
   }
 }

@@ -15,52 +15,43 @@ final settingsLocalDataSourceProvider = Provider<SettingsLocalDataSource>(
   (ref) => SettingsLocalDataSourceImpl(),
 );
 
-final settingsRepositoryProvider = Provider<SettingsRepository>(
-  (ref) {
-    return SettingsRepositoryImpl(
-      localDataSource: ref.watch(settingsLocalDataSourceProvider),
-    );
-  },
-);
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  return SettingsRepositoryImpl(
+    localDataSource: ref.watch(settingsLocalDataSourceProvider),
+  );
+});
 
-final getSettingsUseCaseProvider = Provider<GetSettingsUseCase>(
-  (ref) {
-    return GetSettingsUseCase(
-      repository: ref.watch(settingsRepositoryProvider),
-    );
-  },
-);
+final getSettingsUseCaseProvider = Provider<GetSettingsUseCase>((ref) {
+  return GetSettingsUseCase(repository: ref.watch(settingsRepositoryProvider));
+});
 
-final saveSettingsUseCaseProvider = Provider<SaveSettingsUseCase>(
-  (ref) {
-    return SaveSettingsUseCase(
-      repository: ref.watch(settingsRepositoryProvider),
-    );
-  },
-);
+final saveSettingsUseCaseProvider = Provider<SaveSettingsUseCase>((ref) {
+  return SaveSettingsUseCase(repository: ref.watch(settingsRepositoryProvider));
+});
 
 /// Coordinates persisted Settings with the medicine notification queue.
 final saveAndApplySettingsUseCaseProvider =
     Provider<SaveAndApplySettingsUseCase>((ref) {
-  return SaveAndApplySettingsUseCase(
-    settingsRepository: ref.watch(settingsRepositoryProvider),
-    medicineRepository: ref.watch(medicineRepositoryProvider),
-    reminderNotificationRepository:
-        ref.watch(reminderNotificationRepositoryProvider),
-  );
-});
+      return SaveAndApplySettingsUseCase(
+        settingsRepository: ref.watch(settingsRepositoryProvider),
+        medicineRepository: ref.watch(medicineRepositoryProvider),
+        reminderNotificationRepository: ref.watch(
+          reminderNotificationRepositoryProvider,
+        ),
+      );
+    });
 
 final settingsSoundPreviewServiceProvider =
     Provider<SettingsSoundPreviewService>((ref) {
-  final service = SettingsSoundPreviewService();
+      final service = SettingsSoundPreviewService();
 
-  // Release native audio resources when the provider is disposed.
-  ref.onDispose(() {
-    unawaited(service.dispose());
-  });
+      // Release native audio resources when the provider is disposed.
+      ref.onDispose(() {
+        unawaited(service.dispose());
+      });
 
-  return service;
-});
+      return service;
+    });
 
 class SettingsController extends AsyncNotifier<SettingsEntity> {
   @override
@@ -131,11 +122,7 @@ class SettingsController extends AsyncNotifier<SettingsEntity> {
     );
 
     if (!isKnownSound) {
-      throw ArgumentError.value(
-        soundId,
-        'soundId',
-        'Unknown reminder sound.',
-      );
+      throw ArgumentError.value(soundId, 'soundId', 'Unknown reminder sound.');
     }
 
     final current = state.value;
@@ -161,9 +148,7 @@ class SettingsController extends AsyncNotifier<SettingsEntity> {
     state = AsyncData(updated);
 
     try {
-      final saveAndApply = ref.read(
-        saveAndApplySettingsUseCaseProvider,
-      );
+      final saveAndApply = ref.read(saveAndApplySettingsUseCaseProvider);
 
       await saveAndApply(
         updated,
@@ -182,5 +167,5 @@ class SettingsController extends AsyncNotifier<SettingsEntity> {
 
 final settingsControllerProvider =
     AsyncNotifierProvider<SettingsController, SettingsEntity>(
-  SettingsController.new,
-);
+      SettingsController.new,
+    );

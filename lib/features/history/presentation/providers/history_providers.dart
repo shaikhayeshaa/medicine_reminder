@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../medicine/domain/entities/dose_occurrence_entity.dart';
-import '../../../medicine/domain/entities/dose_status.dart';
 import '../../../medicine/presentation/providers/dose_occurrence_revision_provider.dart';
 import '../../../medicine/presentation/providers/medicine_providers.dart';
 import '../../domain/entities/history_status_filter.dart';
@@ -69,19 +68,8 @@ final historyStatusFilteredProvider =
       final filter = ref.watch(historyStatusFilterProvider);
 
       return occurrences.whenData((items) {
-        if (filter == HistoryStatusFilter.all) {
-          return items;
-        }
-
-        final requiredStatus = switch (filter) {
-          HistoryStatusFilter.taken => DoseStatus.taken,
-          HistoryStatusFilter.missed => DoseStatus.missed,
-          HistoryStatusFilter.skipped => DoseStatus.skipped,
-          HistoryStatusFilter.all => null,
-        };
-
-        return items.where((occurrence) {
-          return occurrence.status == requiredStatus;
-        }).toList();
+        return items
+            .where((occurrence) => matchesHistoryStatus(occurrence, filter))
+            .toList();
       });
     });

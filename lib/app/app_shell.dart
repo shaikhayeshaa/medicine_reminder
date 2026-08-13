@@ -6,10 +6,7 @@ import '../core/presentation/widgets/glass_surface.dart';
 class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const AppShell({
-    super.key,
-    required this.navigationShell,
-  });
+  const AppShell({super.key, required this.navigationShell});
 
   void _onDestinationSelected(int index) {
     navigationShell.goBranch(
@@ -90,10 +87,7 @@ class _NavItem extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             decoration: BoxDecoration(
               color: selected
                   ? scheme.primary.withValues(alpha: 0.14)
@@ -105,25 +99,16 @@ class _NavItem extends StatelessWidget {
               children: [
                 Icon(
                   selected ? selectedIcon : icon,
-                  color: selected
-                      ? scheme.primary
-                      : scheme.onSurfaceVariant,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 3),
                 Text(
                   label,
                   maxLines: 1,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(
-                        color: selected
-                            ? scheme.primary
-                            : scheme.onSurfaceVariant,
-                        fontWeight: selected
-                            ? FontWeight.w800
-                            : FontWeight.w600,
-                      ),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  ),
                 ),
               ],
             ),

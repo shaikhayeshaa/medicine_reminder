@@ -1,12 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DashboardDateNotifier
-    extends Notifier<DateTime> {
+class DashboardDateNotifier extends Notifier<DateTime> {
   @override
   DateTime build() {
-    return _dateOnly(
-      DateTime.now(),
-    );
+    return _dateOnly(DateTime.now());
   }
 
   void selectDate(DateTime date) {
@@ -20,23 +17,14 @@ class DashboardDateNotifier
   }
 
   void selectToday() {
-    selectDate(
-      DateTime.now(),
-    );
+    selectDate(DateTime.now());
   }
 
   DateTime _dateOnly(DateTime date) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    return DateTime(date.year, date.month, date.day);
   }
 }
 
-final dashboardDateProvider =
-    NotifierProvider<
-        DashboardDateNotifier,
-        DateTime>(
+final dashboardDateProvider = NotifierProvider<DashboardDateNotifier, DateTime>(
   DashboardDateNotifier.new,
 );

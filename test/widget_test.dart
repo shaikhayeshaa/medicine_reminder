@@ -1,13 +1,25 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:medicine_reminder/app/app.dart';
+import 'package:medicine_reminder/core/presentation/widgets/status_badge.dart';
+import 'package:medicine_reminder/features/medicine/domain/entities/dose_status.dart';
 
 void main() {
-  testWidgets('Medicine Reminder app smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: MedicineReminderApp()));
+  testWidgets('status badge clearly renders each dose status', (tester) async {
+    for (final status in DoseStatus.values) {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: StatusBadge(status: status)),
+        ),
+      );
 
-    await tester.pump();
+      final expectedLabel = switch (status) {
+        DoseStatus.pending => 'Pending',
+        DoseStatus.taken => 'Taken',
+        DoseStatus.missed => 'Missed',
+        DoseStatus.skipped => 'Skipped',
+      };
 
-    expect(find.text('Medicine Reminder'), findsOneWidget);
+      expect(find.text(expectedLabel), findsOneWidget);
+    }
   });
 }

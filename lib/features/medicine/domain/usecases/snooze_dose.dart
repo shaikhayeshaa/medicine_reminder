@@ -7,10 +7,8 @@ class SnoozeDoseUseCase {
   final MedicineRepository repository;
   final DateTime Function() now;
 
-  SnoozeDoseUseCase({
-    required this.repository,
-    DateTime Function()? now,
-  }) : now = now ?? DateTime.now;
+  SnoozeDoseUseCase({required this.repository, DateTime Function()? now})
+    : now = now ?? DateTime.now;
 
   Future<DoseOccurrenceEntity> call({
     required DoseOccurrenceEntity occurrence,
@@ -22,25 +20,17 @@ class SnoozeDoseUseCase {
     // user's notification action.
     if (occurrence.status != DoseStatus.pending &&
         occurrence.status != DoseStatus.missed) {
-      throw StateError(
-        'Only pending or missed doses can be snoozed.',
-      );
+      throw StateError('Only pending or missed doses can be snoozed.');
     }
 
-    final snoozedUntil = now().add(
-      Duration(
-        minutes: option.minutes,
-      ),
-    );
+    final snoozedUntil = now().add(Duration(minutes: option.minutes));
 
     final updated = occurrence.copyWith(
       status: DoseStatus.pending,
       snoozedUntil: snoozedUntil,
     );
 
-    await repository.updateDoseOccurrence(
-      updated,
-    );
+    await repository.updateDoseOccurrence(updated);
 
     return updated;
   }

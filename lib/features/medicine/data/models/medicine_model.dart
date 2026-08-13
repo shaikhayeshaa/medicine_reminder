@@ -37,9 +37,7 @@ class MedicineModel {
       strength: entity.strength,
       startDate: entity.startDate,
       endDate: entity.endDate,
-      doses: entity.doses
-          .map((dose) => DoseModel.fromEntity(dose))
-          .toList(),
+      doses: entity.doses.map((dose) => DoseModel.fromEntity(dose)).toList(),
       isActive: entity.isActive,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,

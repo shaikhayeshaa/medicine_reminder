@@ -47,8 +47,7 @@ class SaveAndApplySettingsUseCase {
       // apply to reminders that were scheduled using older preferences.
       await reminderNotificationRepository.cancelAllReminders();
 
-      final occurrences =
-          await medicineRepository.getAllDoseOccurrences();
+      final occurrences = await medicineRepository.getAllDoseOccurrences();
 
       await reminderNotificationRepository.scheduleReminders(
         occurrences,

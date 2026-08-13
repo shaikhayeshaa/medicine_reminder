@@ -5,10 +5,7 @@ import 'package:flutter/material.dart';
 class AppBackground extends StatelessWidget {
   final Widget child;
 
-  const AppBackground({
-    super.key,
-    required this.child,
-  });
+  const AppBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -22,16 +19,8 @@ class AppBackground extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? const [
-                  Color(0xFF07111F),
-                  Color(0xFF0B1728),
-                  Color(0xFF071B1D),
-                ]
-              : const [
-                  Color(0xFFF8FBFF),
-                  Color(0xFFF2F7FF),
-                  Color(0xFFF1FBFA),
-                ],
+              ? const [Color(0xFF07111F), Color(0xFF0B1728), Color(0xFF071B1D)]
+              : const [Color(0xFFF8FBFF), Color(0xFFF2F7FF), Color(0xFFF1FBFA)],
         ),
       ),
       child: Stack(
@@ -42,9 +31,7 @@ class AppBackground extends StatelessWidget {
             right: -70,
             child: _GlowOrb(
               size: 260,
-              color: scheme.primary.withValues(
-                alpha: isDark ? 0.18 : 0.14,
-              ),
+              color: scheme.primary.withValues(alpha: isDark ? 0.18 : 0.14),
             ),
           ),
           Positioned(
@@ -52,9 +39,7 @@ class AppBackground extends StatelessWidget {
             left: -100,
             child: _GlowOrb(
               size: 220,
-              color: scheme.secondary.withValues(
-                alpha: isDark ? 0.13 : 0.12,
-              ),
+              color: scheme.secondary.withValues(alpha: isDark ? 0.13 : 0.12),
             ),
           ),
           Positioned(
@@ -62,9 +47,7 @@ class AppBackground extends StatelessWidget {
             right: -90,
             child: _GlowOrb(
               size: 300,
-              color: scheme.tertiary.withValues(
-                alpha: isDark ? 0.10 : 0.09,
-              ),
+              color: scheme.tertiary.withValues(alpha: isDark ? 0.10 : 0.09),
             ),
           ),
           child,
@@ -78,10 +61,7 @@ class _GlowOrb extends StatelessWidget {
   final double size;
   final Color color;
 
-  const _GlowOrb({
-    required this.size,
-    required this.color,
-  });
+  const _GlowOrb({required this.size, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -91,12 +71,7 @@ class _GlowOrb extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color,
-              color.withValues(alpha: 0),
-            ],
-          ),
+          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
         ),
       ),
     );

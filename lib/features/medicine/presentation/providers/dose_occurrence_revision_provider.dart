@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DoseOccurrenceRevisionNotifier
-    extends Notifier<int> {
+class DoseOccurrenceRevisionNotifier extends Notifier<int> {
   @override
   int build() => 0;
 
@@ -11,8 +10,6 @@ class DoseOccurrenceRevisionNotifier
 }
 
 final doseOccurrenceRevisionProvider =
-    NotifierProvider<
-        DoseOccurrenceRevisionNotifier,
-        int>(
-  DoseOccurrenceRevisionNotifier.new,
-);
+    NotifierProvider<DoseOccurrenceRevisionNotifier, int>(
+      DoseOccurrenceRevisionNotifier.new,
+    );

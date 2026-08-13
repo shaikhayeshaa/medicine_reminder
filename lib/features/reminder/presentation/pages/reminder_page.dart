@@ -15,47 +15,34 @@ import '../provider/reminder_occurrence_provider.dart';
 class ReminderPage extends ConsumerWidget {
   final String occurrenceId;
 
-  const ReminderPage({
-    super.key,
-    required this.occurrenceId,
-  });
+  const ReminderPage({super.key, required this.occurrenceId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<AsyncValue<void>>(
-      doseActionControllerProvider,
-      (previous, next) {
-        if (previous?.isLoading == true && next.hasError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Unable to update dose: ${next.error}',
-              ),
-            ),
-          );
-        }
-      },
-    );
+    ref.listen<AsyncValue<void>>(doseActionControllerProvider, (
+      previous,
+      next,
+    ) {
+      if (previous?.isLoading == true && next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to update dose: ${next.error}')),
+        );
+      }
+    });
 
-    final occurrenceAsync = ref.watch(
-      reminderOccurrenceProvider(occurrenceId),
-    );
+    final occurrenceAsync = ref.watch(reminderOccurrenceProvider(occurrenceId));
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBody: true,
       body: AppBackground(
         child: occurrenceAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => _MessageState(
             title: 'Unable to load reminder',
             actionLabel: 'Try again',
             onAction: () {
-              ref.invalidate(
-                reminderOccurrenceProvider(occurrenceId),
-              );
+              ref.invalidate(reminderOccurrenceProvider(occurrenceId));
             },
           ),
           data: (occurrence) {
@@ -70,21 +57,14 @@ class ReminderPage extends ConsumerWidget {
             return SafeArea(
               bottom: false,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  18,
-                  12,
-                  18,
-                  165,
-                ),
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 165),
                 children: [
                   Row(
                     children: [
                       IconButton.filledTonal(
                         tooltip: 'Back',
                         onPressed: context.pop,
-                        icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                        ),
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded),
                       ),
                       const Spacer(),
                       StatusBadge(status: occurrence.status),
@@ -122,8 +102,7 @@ class _ReminderHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final quantity = occurrence.quantity ==
-            occurrence.quantity.roundToDouble()
+    final quantity = occurrence.quantity == occurrence.quantity.roundToDouble()
         ? occurrence.quantity.toInt().toString()
         : occurrence.quantity.toString();
 
@@ -136,10 +115,7 @@ class _ReminderHero extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                scheme.primary,
-                scheme.secondary,
-              ],
+              colors: [scheme.primary, scheme.secondary],
             ),
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
@@ -160,9 +136,9 @@ class _ReminderHero extends StatelessWidget {
         Text(
           'Medicine Reminder',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w800,
-              ),
+            color: scheme.primary,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 5),
         Text(
@@ -174,16 +150,16 @@ class _ReminderHero extends StatelessWidget {
         Text(
           '${occurrence.medicineStrength} • '
           '$quantity ${occurrence.unit}',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         Text(
           DateFormat('hh:mm a').format(occurrence.scheduledAt),
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: scheme.primary,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(color: scheme.primary),
         ),
         if (occurrence.snoozedUntil != null) ...[
           const SizedBox(height: 7),
@@ -205,24 +181,19 @@ class _DetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final quantity = occurrence.quantity ==
-            occurrence.quantity.roundToDouble()
+    final quantity = occurrence.quantity == occurrence.quantity.roundToDouble()
         ? occurrence.quantity.toInt().toString()
         : occurrence.quantity.toString();
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surface
-            .withValues(alpha: 0.88),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.88),
         borderRadius: BorderRadius.circular(26),
         border: Border.all(
-          color: Theme.of(context)
-              .colorScheme
-              .outlineVariant
-              .withValues(alpha: 0.45),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.45),
         ),
       ),
       child: Column(
@@ -259,8 +230,9 @@ class _DetailsCard extends StatelessWidget {
             _DetailRow(
               icon: Icons.task_alt_rounded,
               label: 'Action time',
-              value: DateFormat('dd MMM • hh:mm a')
-                  .format(occurrence.actionAt!),
+              value: DateFormat(
+                'dd MMM • hh:mm a',
+              ).format(occurrence.actionAt!),
             ),
           ],
         ],
@@ -285,11 +257,7 @@ class _DetailRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 21,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(icon, size: 21, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -297,14 +265,9 @@ class _DetailRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant,
-                    ),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 3),
               Text(value),
@@ -321,30 +284,17 @@ class _DoseActionBar extends ConsumerWidget {
 
   const _DoseActionBar({required this.occurrence});
 
-  Future<void> _markTaken(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    await ref
-        .read(doseActionControllerProvider.notifier)
-        .markTaken(occurrence);
+  Future<void> _markTaken(BuildContext context, WidgetRef ref) async {
+    await ref.read(doseActionControllerProvider.notifier).markTaken(occurrence);
     _closeOnSuccess(context, ref);
   }
 
-  Future<void> _skip(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    await ref
-        .read(doseActionControllerProvider.notifier)
-        .skip(occurrence);
+  Future<void> _skip(BuildContext context, WidgetRef ref) async {
+    await ref.read(doseActionControllerProvider.notifier).skip(occurrence);
     _closeOnSuccess(context, ref);
   }
 
-  Future<void> _snooze(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _snooze(BuildContext context, WidgetRef ref) async {
     final option = await showModalBottomSheet<SnoozeOption>(
       context: context,
       showDragHandle: true,
@@ -357,18 +307,12 @@ class _DoseActionBar extends ConsumerWidget {
 
     await ref
         .read(doseActionControllerProvider.notifier)
-        .snooze(
-          occurrence: occurrence,
-          option: option,
-        );
+        .snooze(occurrence: occurrence, option: option);
 
     _closeOnSuccess(context, ref);
   }
 
-  void _closeOnSuccess(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  void _closeOnSuccess(BuildContext context, WidgetRef ref) {
     if (!context.mounted) {
       return;
     }
@@ -382,9 +326,7 @@ class _DoseActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(
-      doseActionControllerProvider.select(
-        (state) => state.isLoading,
-      ),
+      doseActionControllerProvider.select((state) => state.isLoading),
     );
 
     return SafeArea(
@@ -392,7 +334,8 @@ class _DoseActionBar extends ConsumerWidget {
       child: GlassSurface(
         borderRadius: BorderRadius.circular(28),
         padding: const EdgeInsets.all(10),
-        child: occurrence.status != DoseStatus.pending &&
+        child:
+            occurrence.status != DoseStatus.pending &&
                 occurrence.status != DoseStatus.missed
             ? Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -416,16 +359,13 @@ class _DoseActionBar extends ConsumerWidget {
                   const SizedBox(width: 8),
                   IconButton.filledTonal(
                     tooltip: 'Snooze',
-                    onPressed: isLoading
-                        ? null
-                        : () => _snooze(context, ref),
+                    onPressed: isLoading ? null : () => _snooze(context, ref),
                     icon: const Icon(Icons.snooze_rounded),
                   ),
                   const SizedBox(width: 8),
                   IconButton.filledTonal(
                     tooltip: 'Skip',
-                    onPressed:
-                        isLoading ? null : () => _skip(context, ref),
+                    onPressed: isLoading ? null : () => _skip(context, ref),
                     icon: const Icon(Icons.skip_next_rounded),
                   ),
                 ],
@@ -454,14 +394,9 @@ class _SnoozeSheet extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               'Only this dose will move. Your medicine schedule stays unchanged.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant,
-                  ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             for (final option in SnoozeOption.values)
@@ -508,10 +443,7 @@ class _MessageState extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 14),
-              FilledButton(
-                onPressed: onAction,
-                child: Text(actionLabel),
-              ),
+              FilledButton(onPressed: onAction, child: Text(actionLabel)),
             ],
           ),
         ),

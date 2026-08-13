@@ -5,24 +5,17 @@ import '../repositories/medicine_repository.dart';
 class GetDoseOccurrencesByDateUseCase {
   final MedicineRepository repository;
 
-  GetDoseOccurrencesByDateUseCase({
-    required this.repository,
-  });
+  GetDoseOccurrencesByDateUseCase({required this.repository});
 
-  Future<List<DoseOccurrenceEntity>> call(
-    DateTime date,
-  ) async {
-    final occurrences =
-        await repository.getDoseOccurrencesByDate(date);
+  Future<List<DoseOccurrenceEntity>> call(DateTime date) async {
+    final occurrences = await repository.getDoseOccurrencesByDate(date);
 
     final now = DateTime.now();
 
     final result = <DoseOccurrenceEntity>[];
 
     for (final occurrence in occurrences) {
-      final effectiveTime =
-          occurrence.snoozedUntil ??
-          occurrence.scheduledAt;
+      final effectiveTime = occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
       final shouldBeMissed =
           occurrence.status == DoseStatus.pending &&
@@ -46,24 +39,17 @@ class GetDoseOccurrencesByDateUseCase {
         snoozedUntil: occurrence.snoozedUntil,
         createdAt: occurrence.createdAt,
         medicineName: occurrence.medicineName,
-        medicineDescription:
-            occurrence.medicineDescription,
+        medicineDescription: occurrence.medicineDescription,
         medicineType: occurrence.medicineType,
-        medicineStrength:
-            occurrence.medicineStrength,
+        medicineStrength: occurrence.medicineStrength,
       );
 
-      await repository.updateDoseOccurrence(
-        updatedOccurrence,
-      );
+      await repository.updateDoseOccurrence(updatedOccurrence);
 
       result.add(updatedOccurrence);
     }
 
-    result.sort(
-      (a, b) =>
-          a.scheduledAt.compareTo(b.scheduledAt),
-    );
+    result.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
     return result;
   }

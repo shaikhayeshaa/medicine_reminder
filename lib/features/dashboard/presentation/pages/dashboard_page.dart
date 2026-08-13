@@ -15,13 +15,8 @@ import '../widgets/dashboard_stats_section.dart';
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
-  Future<void> _addMedicine(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final added = await context.push<bool>(
-      AppRoutes.addMedicine,
-    );
+  Future<void> _addMedicine(BuildContext context, WidgetRef ref) async {
+    final added = await context.push<bool>(AppRoutes.addMedicine);
 
     if (added == true) {
       ref.invalidate(dashboardOccurrencesProvider);
@@ -37,31 +32,21 @@ class DashboardPage extends ConsumerWidget {
           bottom: false,
           child: RefreshIndicator(
             onRefresh: () async {
-              await ref.refresh(
-                dashboardOccurrencesProvider.future,
-              );
+              await ref.refresh(dashboardOccurrencesProvider.future);
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(
-                18,
-                18,
-                18,
-                150,
-              ),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 150),
               children: [
                 PageHeader(
                   eyebrow: 'Meditrake',
                   title: 'Your daily care',
-                  subtitle:
-                      'Stay on schedule with every dose.',
+                  subtitle: 'Stay on schedule with every dose.',
                   trailing: GlassIconButton(
                     icon: Icons.medication_liquid_rounded,
                     tooltip: 'Manage medicines',
                     onPressed: () {
-                      context.push(
-                        AppRoutes.manageMedicines,
-                      );
+                      context.push(AppRoutes.manageMedicines);
                     },
                   ),
                 ),
@@ -81,10 +66,7 @@ class DashboardPage extends ConsumerWidget {
         child: GlassSurface(
           borderRadius: BorderRadius.circular(22),
           onTap: () => _addMedicine(context, ref),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           tint: Theme.of(context).colorScheme.primary,
           lightOpacity: 0.90,
           darkOpacity: 0.72,
@@ -98,15 +80,10 @@ class DashboardPage extends ConsumerWidget {
               const SizedBox(width: 8),
               Text(
                 'Add Medicine',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelLarge
-                    ?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),

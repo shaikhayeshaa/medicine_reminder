@@ -14,9 +14,5 @@ Future<void> main() async {
   // Initializes timezone data and notification callbacks before the UI starts.
   await NotificationService.instance.initialize();
 
-  runApp(
-    const ProviderScope(
-      child: MedicineReminderApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MedicineReminderApp()));
 }

@@ -7,6 +7,7 @@ import '../../../../core/presentation/widgets/glass_surface.dart';
 import '../../../../core/presentation/widgets/page_header.dart';
 import '../../../../core/presentation/widgets/status_badge.dart';
 import '../../../medicine/domain/entities/dose_occurrence_entity.dart';
+import '../../../medicine/domain/utils/occurrence_search.dart';
 import '../../domain/entities/history_status_filter.dart';
 import '../providers/history_providers.dart';
 
@@ -18,10 +19,8 @@ class HistoryPage extends ConsumerStatefulWidget {
 }
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
-  final TextEditingController _searchController =
-      TextEditingController();
-  final ValueNotifier<String> _searchQuery =
-      ValueNotifier<String>('');
+  final TextEditingController _searchController = TextEditingController();
+  final ValueNotifier<String> _searchQuery = ValueNotifier<String>('');
 
   @override
   void initState() {
@@ -30,8 +29,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   }
 
   void _onSearchChanged() {
-    _searchQuery.value =
-        _searchController.text.trim().toLowerCase();
+    _searchQuery.value = _searchController.text.trim().toLowerCase();
   }
 
   @override
@@ -63,8 +61,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     child: PageHeader(
                       eyebrow: 'Dose timeline',
                       title: 'History',
-                      subtitle:
-                          'Review exactly what happened with every dose.',
+                      subtitle: 'Review exactly what happened with every dose.',
                     ),
                   ),
                 ),
@@ -78,14 +75,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                         textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
                           hintText: 'Search medicine, type or description',
-                          prefixIcon:
-                              const Icon(Icons.search_rounded),
+                          prefixIcon: const Icon(Icons.search_rounded),
                           filled: false,
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-                          suffixIcon:
-                              ValueListenableBuilder<TextEditingValue>(
+                          suffixIcon: ValueListenableBuilder<TextEditingValue>(
                             valueListenable: _searchController,
                             builder: (context, value, child) {
                               if (value.text.isEmpty) {
@@ -117,9 +112,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   ),
                 ),
                 _HistoryList(searchQuery: _searchQuery),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 130),
-                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 130)),
               ],
             ),
           ),
@@ -150,15 +143,10 @@ class _HistoryDateFilter extends ConsumerWidget {
               );
 
               if (date != null) {
-                ref
-                    .read(historyDateProvider.notifier)
-                    .selectDate(date);
+                ref.read(historyDateProvider.notifier).selectDate(date);
               }
             },
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
                 const Icon(Icons.calendar_month_rounded, size: 20),
@@ -167,8 +155,7 @@ class _HistoryDateFilter extends ConsumerWidget {
                   child: Text(
                     selectedDate == null
                         ? 'All dates'
-                        : DateFormat('dd MMM yyyy')
-                            .format(selectedDate),
+                        : DateFormat('dd MMM yyyy').format(selectedDate),
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
                 ),
@@ -215,9 +202,7 @@ class _StatusFilters extends ConsumerWidget {
             label: Text(item.$2),
             selected: selected == item.$1,
             onSelected: (_) {
-              ref
-                  .read(historyStatusFilterProvider.notifier)
-                  .select(item.$1);
+              ref.read(historyStatusFilterProvider.notifier).select(item.$1);
             },
           ),
       ],
@@ -232,8 +217,7 @@ class _HistoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final occurrencesAsync =
-        ref.watch(historyStatusFilteredProvider);
+    final occurrencesAsync = ref.watch(historyStatusFilteredProvider);
 
     return occurrencesAsync.when(
       loading: () => const SliverFillRemaining(
@@ -256,21 +240,11 @@ class _HistoryList extends ConsumerWidget {
         return ValueListenableBuilder<String>(
           valueListenable: searchQuery,
           builder: (context, query, child) {
-            final filtered = occurrences.where((occurrence) {
-              if (query.isEmpty) {
-                return true;
-              }
-
-              return occurrence.medicineName
-                      .toLowerCase()
-                      .contains(query) ||
-                  occurrence.medicineDescription
-                      .toLowerCase()
-                      .contains(query) ||
-                  occurrence.medicineType
-                      .toLowerCase()
-                      .contains(query);
-            }).toList();
+            final filtered = occurrences
+                .where(
+                  (occurrence) => occurrenceMatchesSearch(occurrence, query),
+                )
+                .toList();
 
             if (filtered.isEmpty) {
               return const SliverFillRemaining(
@@ -285,22 +259,17 @@ class _HistoryList extends ConsumerWidget {
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   final occurrence = filtered[index];
-                  final previous =
-                      index == 0 ? null : filtered[index - 1];
-                  final showDateHeader = previous == null ||
-                      !_sameDay(
-                        previous.scheduledAt,
-                        occurrence.scheduledAt,
-                      );
+                  final previous = index == 0 ? null : filtered[index - 1];
+                  final showDateHeader =
+                      previous == null ||
+                      !_sameDay(previous.scheduledAt, occurrence.scheduledAt);
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (showDateHeader)
                         _DateHeader(date: occurrence.scheduledAt),
-                      _HistoryOccurrenceCard(
-                        occurrence: occurrence,
-                      ),
+                      _HistoryOccurrenceCard(occurrence: occurrence),
                     ],
                   );
                 },
@@ -344,8 +313,7 @@ class _HistoryOccurrenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final quantity = occurrence.quantity ==
-            occurrence.quantity.roundToDouble()
+    final quantity = occurrence.quantity == occurrence.quantity.roundToDouble()
         ? occurrence.quantity.toInt().toString()
         : occurrence.quantity.toString();
 
@@ -367,9 +335,9 @@ class _HistoryOccurrenceCard extends StatelessWidget {
             child: Text(
               DateFormat('hh:mm a').format(occurrence.scheduledAt),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w800,
-                  ),
+                color: scheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -385,10 +353,9 @@ class _HistoryOccurrenceCard extends StatelessWidget {
                 Text(
                   '${occurrence.medicineStrength} • '
                   '$quantity ${occurrence.unit}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 if (occurrence.foodInstruction.isNotEmpty) ...[
                   const SizedBox(height: 4),
@@ -440,14 +407,9 @@ class _HistoryEmptyState extends StatelessWidget {
             Text(
               'Try another date, status, or search term.',
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant,
-                  ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

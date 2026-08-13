@@ -11,16 +11,11 @@ class StopMedicineUseCase {
   final MedicineRepository repository;
   final DateTime Function() now;
 
-  StopMedicineUseCase({
-    required this.repository,
-    DateTime Function()? now,
-  }) : now = now ?? DateTime.now;
+  StopMedicineUseCase({required this.repository, DateTime Function()? now})
+    : now = now ?? DateTime.now;
 
-  Future<List<DoseOccurrenceEntity>> call(
-    String medicineId,
-  ) async {
-    final medicine =
-        await repository.getMedicineById(medicineId);
+  Future<List<DoseOccurrenceEntity>> call(String medicineId) async {
+    final medicine = await repository.getMedicineById(medicineId);
 
     if (medicine == null) {
       throw StateError('Medicine not found.');
@@ -28,8 +23,7 @@ class StopMedicineUseCase {
 
     final currentTime = now();
 
-    final occurrences =
-        await repository.getDoseOccurrencesByMedicineId(
+    final occurrences = await repository.getDoseOccurrencesByMedicineId(
       medicineId,
     );
 
@@ -37,9 +31,9 @@ class StopMedicineUseCase {
         .where(
           (occurrence) =>
               occurrence.status == DoseStatus.pending &&
-              !(occurrence.snoozedUntil ??
-                      occurrence.scheduledAt)
-                  .isBefore(currentTime),
+              !(occurrence.snoozedUntil ?? occurrence.scheduledAt).isBefore(
+                currentTime,
+              ),
         )
         .toList();
 
@@ -52,11 +46,7 @@ class StopMedicineUseCase {
       startDate: medicine.startDate,
 
       // Mark today as the treatment's final date.
-      endDate: DateTime(
-        currentTime.year,
-        currentTime.month,
-        currentTime.day,
-      ),
+      endDate: DateTime(currentTime.year, currentTime.month, currentTime.day),
 
       doses: medicine.doses,
       isActive: false,

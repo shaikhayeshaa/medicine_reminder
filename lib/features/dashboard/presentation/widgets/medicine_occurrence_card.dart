@@ -17,8 +17,7 @@ class MedicineOccurrenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final quantity = occurrence.quantity ==
-            occurrence.quantity.roundToDouble()
+    final quantity = occurrence.quantity == occurrence.quantity.roundToDouble()
         ? occurrence.quantity.toInt().toString()
         : occurrence.quantity.toString();
 
@@ -54,25 +53,15 @@ class MedicineOccurrenceCard extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        DateFormat('hh:mm').format(
-                          occurrence.scheduledAt,
-                        ),
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(
-                              color: scheme.primary,
-                            ),
+                        DateFormat('hh:mm').format(occurrence.scheduledAt),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: scheme.primary),
                       ),
                       Text(
-                        DateFormat('a')
-                            .format(occurrence.scheduledAt),
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(
-                              color: scheme.primary,
-                            ),
+                        DateFormat('a').format(occurrence.scheduledAt),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelSmall?.copyWith(color: scheme.primary),
                       ),
                     ],
                   ),
@@ -83,15 +72,12 @@ class MedicineOccurrenceCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Text(
                               occurrence.medicineName,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium,
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -102,12 +88,9 @@ class MedicineOccurrenceCard extends StatelessWidget {
                       Text(
                         '${occurrence.medicineStrength} • '
                         '$quantity ${occurrence.unit}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                       if (occurrence.foodInstruction.isNotEmpty) ...[
                         const SizedBox(height: 8),
@@ -122,9 +105,7 @@ class MedicineOccurrenceCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 occurrence.foodInstruction,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall,
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
                           ],
@@ -134,9 +115,7 @@ class MedicineOccurrenceCard extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(
                           'Snoozed until ${DateFormat('hh:mm a').format(occurrence.snoozedUntil!)}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium
+                          style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(color: scheme.primary),
                         ),
                       ],

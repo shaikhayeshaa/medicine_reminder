@@ -2,13 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/medicine_entity.dart';
 import 'medicine_providers.dart';
 
-class MedicineNotifier
-    extends AsyncNotifier<List<MedicineEntity>> {
+class MedicineNotifier extends AsyncNotifier<List<MedicineEntity>> {
   @override
   Future<List<MedicineEntity>> build() async {
-    final repository = ref.watch(
-      medicineRepositoryProvider,
-    );
+    final repository = ref.watch(medicineRepositoryProvider);
 
     return repository.getAllMedicines();
   }
@@ -17,9 +14,7 @@ class MedicineNotifier
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
-      final repository = ref.read(
-        medicineRepositoryProvider,
-      );
+      final repository = ref.read(medicineRepositoryProvider);
 
       return repository.getAllMedicines();
     });
@@ -27,8 +22,6 @@ class MedicineNotifier
 }
 
 final medicineNotifierProvider =
-    AsyncNotifierProvider<
-        MedicineNotifier,
-        List<MedicineEntity>>(
-  MedicineNotifier.new,
-);
+    AsyncNotifierProvider<MedicineNotifier, List<MedicineEntity>>(
+      MedicineNotifier.new,
+    );

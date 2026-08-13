@@ -18,27 +18,20 @@ class GenerateDoseOccurrencesUseCase {
         ? _dateOnly(medicine.endDate!)
         : null;
 
-    if (treatmentEnd != null &&
-        treatmentEnd.isBefore(treatmentStart)) {
-      throw ArgumentError(
-        'End date cannot be before start date.',
-      );
+    if (treatmentEnd != null && treatmentEnd.isBefore(treatmentStart)) {
+      throw ArgumentError('End date cannot be before start date.');
     }
 
     // For ongoing medicine we MUST provide a safe future limit.
     if (treatmentEnd == null && until == null) {
-      throw ArgumentError(
-        'until is required for an ongoing medicine.',
-      );
+      throw ArgumentError('until is required for an ongoing medicine.');
     }
 
-    final requestedStart =
-        from != null ? _dateOnly(from) : treatmentStart;
+    final requestedStart = from != null ? _dateOnly(from) : treatmentStart;
 
-    final generationStart =
-        requestedStart.isAfter(treatmentStart)
-            ? requestedStart
-            : treatmentStart;
+    final generationStart = requestedStart.isAfter(treatmentStart)
+        ? requestedStart
+        : treatmentStart;
 
     DateTime generationEnd;
 
@@ -49,8 +42,7 @@ class GenerateDoseOccurrencesUseCase {
           ? requestedEnd
           : treatmentEnd;
     } else {
-      generationEnd =
-          treatmentEnd ?? _dateOnly(until!);
+      generationEnd = treatmentEnd ?? _dateOnly(until!);
     }
 
     if (generationEnd.isBefore(generationStart)) {
@@ -104,23 +96,15 @@ class GenerateDoseOccurrencesUseCase {
         );
       }
 
-      currentDate = currentDate.add(
-        const Duration(days: 1),
-      );
+      currentDate = currentDate.add(const Duration(days: 1));
     }
 
-    occurrences.sort(
-      (a, b) => a.scheduledAt.compareTo(b.scheduledAt),
-    );
+    occurrences.sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
     return occurrences;
   }
 
   DateTime _dateOnly(DateTime date) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    return DateTime(date.year, date.month, date.day);
   }
 }

@@ -9,115 +9,72 @@ import '../../../medicine/presentation/providers/dose_occurrence_revision_provid
 import '../../../medicine/presentation/providers/medicine_providers.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
 
-class NotificationActionController
-    extends AsyncNotifier<void> {
+class NotificationActionController extends AsyncNotifier<void> {
   @override
   FutureOr<void> build() {}
 
-  Future<void> handleAction(
-    NotificationActionEvent event,
-  ) async {
+  Future<void> handleAction(NotificationActionEvent event) async {
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
-      final getOccurrence = ref.read(
-        getDoseOccurrenceByIdUseCaseProvider,
-      );
+      final getOccurrence = ref.read(getDoseOccurrenceByIdUseCaseProvider);
 
       // Payload contains the individual occurrence id.
-      final occurrence =
-          await getOccurrence(
-        event.occurrenceId,
-      );
+      final occurrence = await getOccurrence(event.occurrenceId);
 
       if (occurrence == null) {
-        throw StateError(
-          'Dose occurrence not found.',
-        );
+        throw StateError('Dose occurrence not found.');
       }
 
-      final notificationRepository =
-          ref.read(
+      final notificationRepository = ref.read(
         reminderNotificationRepositoryProvider,
       );
 
       switch (event.actionId) {
-        case NotificationConstants
-            .takenActionId:
-          final markTaken = ref.read(
-            markDoseTakenUseCaseProvider,
-          );
+        case NotificationConstants.takenActionId:
+          final markTaken = ref.read(markDoseTakenUseCaseProvider);
 
           // Persist Taken + actual action time.
-          await markTaken(
-            occurrence,
-          );
+          await markTaken(occurrence);
 
-          await notificationRepository
-              .cancelReminder(
-            occurrence.id,
-          );
+          await notificationRepository.cancelReminder(occurrence.id);
 
           break;
 
-        case NotificationConstants
-            .skipActionId:
-          final skip = ref.read(
-            skipDoseUseCaseProvider,
-          );
+        case NotificationConstants.skipActionId:
+          final skip = ref.read(skipDoseUseCaseProvider);
 
           // Persist Skipped + actual action time.
-          await skip(
-            occurrence,
-          );
+          await skip(occurrence);
 
-          await notificationRepository
-              .cancelReminder(
-            occurrence.id,
-          );
+          await notificationRepository.cancelReminder(occurrence.id);
 
           break;
 
-        case NotificationConstants
-            .snoozeActionId:
-          final settings = await ref.read(
-            settingsControllerProvider.future,
-          );
+        case NotificationConstants.snoozeActionId:
+          final settings = await ref.read(settingsControllerProvider.future);
 
-          final snoozeUseCase = ref.read(
-            snoozeDoseUseCaseProvider,
-          );
+          final snoozeUseCase = ref.read(snoozeDoseUseCaseProvider);
 
           // Convert persisted 5/10/15/30 setting
           // into our domain SnoozeOption enum.
-          final option =
-              SnoozeOption.values.firstWhere(
-            (item) =>
-                item.minutes ==
-                settings.defaultSnoozeMinutes,
-            orElse: () =>
-                SnoozeOption.tenMinutes,
+          final option = SnoozeOption.values.firstWhere(
+            (item) => item.minutes == settings.defaultSnoozeMinutes,
+            orElse: () => SnoozeOption.tenMinutes,
           );
 
-          final updated =
-              await snoozeUseCase(
+          final updated = await snoozeUseCase(
             occurrence: occurrence,
             option: option,
           );
 
-          await notificationRepository
-              .cancelReminder(
-            occurrence.id,
-          );
+          await notificationRepository.cancelReminder(occurrence.id);
 
           if (settings.notificationsEnabled) {
-            await notificationRepository
-                .scheduleReminder(
+            await notificationRepository.scheduleReminder(
               updated,
-              vibrationEnabled:
-                  settings.vibrationEnabled,
-              soundId:
-                  settings.reminderSoundId,
+              vibrationEnabled: settings.vibrationEnabled,
+              soundId: settings.reminderSoundId,
             );
           }
 
@@ -128,19 +85,12 @@ class NotificationActionController
       }
 
       // Dashboard / History / Reminder providers refresh.
-      ref
-          .read(
-            doseOccurrenceRevisionProvider
-                .notifier,
-          )
-          .changed();
+      ref.read(doseOccurrenceRevisionProvider.notifier).changed();
     });
   }
 }
 
 final notificationActionControllerProvider =
-    AsyncNotifierProvider<
-        NotificationActionController,
-        void>(
-  NotificationActionController.new,
-);
+    AsyncNotifierProvider<NotificationActionController, void>(
+      NotificationActionController.new,
+    );

@@ -9,13 +9,11 @@ class DoseInputController {
   final TextEditingController unitController;
   final TextEditingController foodInstructionController;
 
-  DoseInputController({
-    required this.id,
-    required TimeOfDay initialTime,
-  })  : time = ValueNotifier(initialTime),
-        quantityController = TextEditingController(),
-        unitController = TextEditingController(),
-        foodInstructionController = TextEditingController();
+  DoseInputController({required this.id, required TimeOfDay initialTime})
+    : time = ValueNotifier(initialTime),
+      quantityController = TextEditingController(),
+      unitController = TextEditingController(),
+      foodInstructionController = TextEditingController();
 
   void dispose() {
     time.dispose();

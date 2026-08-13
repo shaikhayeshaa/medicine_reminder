@@ -7,9 +7,7 @@ class ReminderNotificationRepositoryImpl
     implements ReminderNotificationRepository {
   final NotificationService notificationService;
 
-  ReminderNotificationRepositoryImpl({
-    required this.notificationService,
-  });
+  ReminderNotificationRepositoryImpl({required this.notificationService});
 
   @override
   Future<void> requestPermissions() {
@@ -40,31 +38,24 @@ class ReminderNotificationRepositoryImpl
     // Only pending future occurrences should create notifications.
     final futureOccurrences =
         occurrences.where((occurrence) {
-      if (occurrence.status != DoseStatus.pending) {
-        return false;
-      }
+          if (occurrence.status != DoseStatus.pending) {
+            return false;
+          }
 
-      final reminderTime =
-          occurrence.snoozedUntil ??
-          occurrence.scheduledAt;
+          final reminderTime =
+              occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
-      return reminderTime.isAfter(now);
-    }).toList()
-      ..sort((a, b) {
-        final aTime =
-            a.snoozedUntil ??
-            a.scheduledAt;
+          return reminderTime.isAfter(now);
+        }).toList()..sort((a, b) {
+          final aTime = a.snoozedUntil ?? a.scheduledAt;
 
-        final bTime =
-            b.snoozedUntil ??
-            b.scheduledAt;
+          final bTime = b.snoozedUntil ?? b.scheduledAt;
 
-        return aTime.compareTo(bTime);
-      });
+          return aTime.compareTo(bTime);
+        });
 
     // Safe rolling queue instead of scheduling unlimited reminders.
-    for (final occurrence
-        in futureOccurrences.take(50)) {
+    for (final occurrence in futureOccurrences.take(50)) {
       await notificationService.scheduleDoseReminder(
         occurrence,
         vibrationEnabled: vibrationEnabled,
@@ -72,7 +63,6 @@ class ReminderNotificationRepositoryImpl
       );
     }
   }
-
 
   @override
   Future<void> synchronizeReminders(
@@ -82,21 +72,21 @@ class ReminderNotificationRepositoryImpl
   }) async {
     final now = DateTime.now();
 
-    final desired = occurrences.where((occurrence) {
-      if (occurrence.status != DoseStatus.pending) {
-        return false;
-      }
+    final desired =
+        occurrences.where((occurrence) {
+          if (occurrence.status != DoseStatus.pending) {
+            return false;
+          }
 
-      final reminderTime =
-          occurrence.snoozedUntil ?? occurrence.scheduledAt;
+          final reminderTime =
+              occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
-      return reminderTime.isAfter(now);
-    }).toList()
-      ..sort((a, b) {
-        final aTime = a.snoozedUntil ?? a.scheduledAt;
-        final bTime = b.snoozedUntil ?? b.scheduledAt;
-        return aTime.compareTo(bTime);
-      });
+          return reminderTime.isAfter(now);
+        }).toList()..sort((a, b) {
+          final aTime = a.snoozedUntil ?? a.scheduledAt;
+          final bTime = b.snoozedUntil ?? b.scheduledAt;
+          return aTime.compareTo(bTime);
+        });
 
     // Keep the queue safely below iOS' pending-local-notification ceiling.
     await notificationService.synchronizeDoseReminders(
@@ -107,17 +97,12 @@ class ReminderNotificationRepositoryImpl
   }
 
   @override
-  Future<void> cancelReminder(
-    String occurrenceId,
-  ) {
-    return notificationService.cancelDoseReminder(
-      occurrenceId,
-    );
+  Future<void> cancelReminder(String occurrenceId) {
+    return notificationService.cancelDoseReminder(occurrenceId);
   }
 
   @override
   Future<void> cancelAllReminders() {
-    return notificationService
-        .cancelAllDoseReminders();
+    return notificationService.cancelAllDoseReminders();
   }
 }

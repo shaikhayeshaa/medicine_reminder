@@ -15,11 +15,8 @@ class ResumeMedicineUseCase {
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
 
-  Future<MedicineScheduleChangeResult> call(
-    String medicineId,
-  ) async {
-    final medicine =
-        await repository.getMedicineById(medicineId);
+  Future<MedicineScheduleChangeResult> call(String medicineId) async {
+    final medicine = await repository.getMedicineById(medicineId);
 
     if (medicine == null) {
       throw StateError('Medicine not found.');
@@ -39,9 +36,7 @@ class ResumeMedicineUseCase {
       );
 
       if (!endOfDay.isAfter(currentTime)) {
-        throw StateError(
-          'Stopped or completed medicine cannot be resumed.',
-        );
+        throw StateError('Stopped or completed medicine cannot be resumed.');
       }
     }
 
@@ -53,14 +48,13 @@ class ResumeMedicineUseCase {
 
     await repository.updateMedicine(resumedMedicine);
 
-    final generationEnd = medicine.endDate ??
+    final generationEnd =
+        medicine.endDate ??
         DateTime(
           currentTime.year,
           currentTime.month,
           currentTime.day,
-        ).add(
-          const Duration(days: 29),
-        );
+        ).add(const Duration(days: 29));
 
     final generated = generateOccurrences(
       medicine: resumedMedicine,
@@ -70,9 +64,7 @@ class ResumeMedicineUseCase {
 
     await repository.saveDoseOccurrences(generated);
 
-    return MedicineScheduleChangeResult(
-      createdOccurrences: generated,
-    );
+    return MedicineScheduleChangeResult(createdOccurrences: generated);
   }
 
   MedicineEntity _copyMedicine(

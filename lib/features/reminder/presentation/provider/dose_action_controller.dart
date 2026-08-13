@@ -51,54 +51,42 @@ class DoseActionController extends AsyncNotifier<void> {
   }
 
   Future<void> snooze({
-  required DoseOccurrenceEntity occurrence,
-  required SnoozeOption option,
-}) async {
-  state = const AsyncLoading();
+    required DoseOccurrenceEntity occurrence,
+    required SnoozeOption option,
+  }) async {
+    state = const AsyncLoading();
 
-  state = await AsyncValue.guard(() async {
-    final useCase = ref.read(
-      snoozeDoseUseCaseProvider,
-    );
+    state = await AsyncValue.guard(() async {
+      final useCase = ref.read(snoozeDoseUseCaseProvider);
 
-    final notificationRepository =
-        ref.read(
-      reminderNotificationRepositoryProvider,
-    );
-
-    // Update this one occurrence in Hive.
-    final updatedOccurrence =
-        await useCase(
-      occurrence: occurrence,
-      option: option,
-    );
-
-    // Remove its previous notification.
-    await notificationRepository
-        .cancelReminder(
-      occurrence.id,
-    );
-
-    final settings = await ref.read(
-      settingsControllerProvider.future,
-    );
-
-    // If notifications are globally disabled,
-    // only persist snoozedUntil; don't create a new OS reminder.
-    if (settings.notificationsEnabled) {
-      await notificationRepository
-          .scheduleReminder(
-        updatedOccurrence,
-        vibrationEnabled:
-            settings.vibrationEnabled,
-        soundId:
-            settings.reminderSoundId,
+      final notificationRepository = ref.read(
+        reminderNotificationRepositoryProvider,
       );
-    }
 
-    _notifyOccurrenceChanged();
-  });
-}
+      // Update this one occurrence in Hive.
+      final updatedOccurrence = await useCase(
+        occurrence: occurrence,
+        option: option,
+      );
+
+      // Remove its previous notification.
+      await notificationRepository.cancelReminder(occurrence.id);
+
+      final settings = await ref.read(settingsControllerProvider.future);
+
+      // If notifications are globally disabled,
+      // only persist snoozedUntil; don't create a new OS reminder.
+      if (settings.notificationsEnabled) {
+        await notificationRepository.scheduleReminder(
+          updatedOccurrence,
+          vibrationEnabled: settings.vibrationEnabled,
+          soundId: settings.reminderSoundId,
+        );
+      }
+
+      _notifyOccurrenceChanged();
+    });
+  }
 
   void _notifyOccurrenceChanged() {
     ref.read(doseOccurrenceRevisionProvider.notifier).changed();

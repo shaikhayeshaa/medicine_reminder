@@ -11,9 +11,7 @@ class GetHistoryOccurrencesUseCase {
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
 
-  Future<List<DoseOccurrenceEntity>> call({
-    DateTime? date,
-  }) async {
+  Future<List<DoseOccurrenceEntity>> call({DateTime? date}) async {
     final occurrences = date == null
         ? await repository.getAllDoseOccurrences()
         : await repository.getDoseOccurrencesByDate(date);
@@ -22,17 +20,14 @@ class GetHistoryOccurrencesUseCase {
     final result = <DoseOccurrenceEntity>[];
 
     for (final occurrence in occurrences) {
-      final effectiveTime =
-          occurrence.snoozedUntil ?? occurrence.scheduledAt;
+      final effectiveTime = occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
       final shouldBeMissed =
           occurrence.status == DoseStatus.pending &&
           effectiveTime.isBefore(currentTime);
 
       if (shouldBeMissed) {
-        final updated = occurrence.copyWith(
-          status: DoseStatus.missed,
-        );
+        final updated = occurrence.copyWith(status: DoseStatus.missed);
 
         await repository.updateDoseOccurrence(updated);
         result.add(updated);
@@ -48,9 +43,7 @@ class GetHistoryOccurrencesUseCase {
       result.add(occurrence);
     }
 
-    result.sort(
-      (a, b) => b.scheduledAt.compareTo(a.scheduledAt),
-    );
+    result.sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
 
     return result;
   }

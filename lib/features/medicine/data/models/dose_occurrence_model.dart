@@ -40,9 +40,7 @@ class DoseOccurrenceModel {
     required this.medicineStrength,
   });
 
-  factory DoseOccurrenceModel.fromEntity(
-    DoseOccurrenceEntity entity,
-  ) {
+  factory DoseOccurrenceModel.fromEntity(DoseOccurrenceEntity entity) {
     return DoseOccurrenceModel(
       id: entity.id,
       medicineId: entity.medicineId,

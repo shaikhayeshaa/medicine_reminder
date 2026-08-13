@@ -55,9 +55,9 @@ class DoseFormCard extends StatelessWidget {
                 child: Text(
                   '${index + 1}',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -81,10 +81,7 @@ class DoseFormCard extends StatelessWidget {
             builder: (context, selectedTime, child) {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  Icons.schedule_rounded,
-                  color: scheme.primary,
-                ),
+                leading: Icon(Icons.schedule_rounded, color: scheme.primary),
                 title: const Text('Dose time'),
                 subtitle: Text(selectedTime.format(context)),
                 trailing: const Icon(Icons.chevron_right_rounded),
@@ -94,9 +91,7 @@ class DoseFormCard extends StatelessWidget {
           ),
           TextFormField(
             controller: controller.quantityController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(labelText: 'Quantity'),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {

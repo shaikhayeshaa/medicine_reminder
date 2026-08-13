@@ -14,16 +14,13 @@ class DashboardStatsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Daily overview',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Daily overview', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(
           'A quick view of today\'s individual dose occurrences.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 14),
         statsAsync.when(
@@ -113,10 +110,7 @@ class _TotalDoseCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 16,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -125,9 +119,7 @@ class _TotalDoseCard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: [
@@ -138,10 +130,7 @@ class _TotalDoseCard extends StatelessWidget {
               color: scheme.primary.withValues(alpha: 0.13),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
-              Icons.medication_rounded,
-              color: scheme.primary,
-            ),
+            child: Icon(Icons.medication_rounded, color: scheme.primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -155,8 +144,8 @@ class _TotalDoseCard extends StatelessWidget {
                 Text(
                   'Total doses scheduled',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -195,11 +184,7 @@ class _StatusStatCard extends StatelessWidget {
               color: item.color.withValues(alpha: 0.11),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              item.icon,
-              color: item.color,
-              size: 21,
-            ),
+            child: Icon(item.icon, color: item.color, size: 21),
           ),
           const SizedBox(width: 11),
           Expanded(
@@ -217,8 +202,8 @@ class _StatusStatCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -235,12 +220,7 @@ class _StatData {
   final IconData icon;
   final Color color;
 
-  const _StatData(
-    this.label,
-    this.value,
-    this.icon,
-    this.color,
-  );
+  const _StatData(this.label, this.value, this.icon, this.color);
 }
 
 class _StatsError extends StatelessWidget {
@@ -258,11 +238,7 @@ class _StatsError extends StatelessWidget {
         children: [
           Icon(Icons.error_outline_rounded),
           SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Unable to load daily statistics.',
-            ),
-          ),
+          Expanded(child: Text('Unable to load daily statistics.')),
         ],
       ),
     );

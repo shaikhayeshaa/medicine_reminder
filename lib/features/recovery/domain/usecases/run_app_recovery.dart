@@ -41,11 +41,7 @@ class RunAppRecoveryUseCase {
 
       if (_hasTreatmentEnded(medicine, currentTime)) {
         await medicineRepository.updateMedicine(
-          _copyMedicine(
-            medicine,
-            isActive: false,
-            updatedAt: currentTime,
-          ),
+          _copyMedicine(medicine, isActive: false, updatedAt: currentTime),
         );
         continue;
       }
@@ -63,9 +59,7 @@ class RunAppRecoveryUseCase {
       }
 
       await medicineRepository.updateDoseOccurrence(
-        occurrence.copyWith(
-          status: DoseStatus.missed,
-        ),
+        occurrence.copyWith(status: DoseStatus.missed),
       );
       markedMissed++;
     }
@@ -113,13 +107,11 @@ class RunAppRecoveryUseCase {
     }
 
     if (generatedToSave.isNotEmpty) {
-      await medicineRepository.saveDoseOccurrences(
-        generatedToSave,
-      );
+      await medicineRepository.saveDoseOccurrences(generatedToSave);
     }
 
-    final repairedOccurrences =
-        await medicineRepository.getAllDoseOccurrences();
+    final repairedOccurrences = await medicineRepository
+        .getAllDoseOccurrences();
     final settings = await settingsRepository.getSettings();
 
     try {
@@ -156,16 +148,12 @@ class RunAppRecoveryUseCase {
       return false;
     }
 
-    final effectiveTime =
-        occurrence.snoozedUntil ?? occurrence.scheduledAt;
+    final effectiveTime = occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
     return effectiveTime.isBefore(currentTime);
   }
 
-  bool _hasTreatmentEnded(
-    MedicineEntity medicine,
-    DateTime currentTime,
-  ) {
+  bool _hasTreatmentEnded(MedicineEntity medicine, DateTime currentTime) {
     if (medicine.endDate == null) {
       return false;
     }
@@ -204,18 +192,12 @@ class RunAppRecoveryUseCase {
     );
 
     if (treatmentEnd.isBefore(
-      DateTime(
-        currentTime.year,
-        currentTime.month,
-        currentTime.day,
-      ),
+      DateTime(currentTime.year, currentTime.month, currentTime.day),
     )) {
       return null;
     }
 
-    return treatmentEnd.isBefore(rollingEnd)
-        ? treatmentEnd
-        : rollingEnd;
+    return treatmentEnd.isBefore(rollingEnd) ? treatmentEnd : rollingEnd;
   }
 
   MedicineEntity _copyMedicine(

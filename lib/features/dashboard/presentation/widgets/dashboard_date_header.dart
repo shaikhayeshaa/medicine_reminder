@@ -31,9 +31,7 @@ class DashboardDateHeader extends ConsumerWidget {
       return;
     }
 
-    ref
-        .read(dashboardDateProvider.notifier)
-        .selectDate(selectedDate);
+    ref.read(dashboardDateProvider.notifier).selectDate(selectedDate);
   }
 
   @override
@@ -53,10 +51,7 @@ class DashboardDateHeader extends ConsumerWidget {
               color: scheme.primary.withValues(alpha: 0.13),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
-              Icons.calendar_today_rounded,
-              color: scheme.primary,
-            ),
+            child: Icon(Icons.calendar_today_rounded, color: scheme.primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -65,17 +60,13 @@ class DashboardDateHeader extends ConsumerWidget {
               children: [
                 Text(
                   isToday ? 'Today' : 'Selected day',
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  DateFormat('EEE, d MMM yyyy')
-                      .format(selectedDate),
+                  DateFormat('EEE, d MMM yyyy').format(selectedDate),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],
@@ -84,19 +75,13 @@ class DashboardDateHeader extends ConsumerWidget {
           if (!isToday)
             TextButton(
               onPressed: () {
-                ref
-                    .read(dashboardDateProvider.notifier)
-                    .selectToday();
+                ref.read(dashboardDateProvider.notifier).selectToday();
               },
               child: const Text('Today'),
             ),
           IconButton.filledTonal(
             tooltip: 'Choose date',
-            onPressed: () => _selectDate(
-              context,
-              ref,
-              selectedDate,
-            ),
+            onPressed: () => _selectDate(context, ref, selectedDate),
             icon: const Icon(Icons.edit_calendar_rounded),
           ),
         ],

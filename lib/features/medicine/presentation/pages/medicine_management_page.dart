@@ -26,10 +26,7 @@ class MedicineManagementPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text(
           'Manage Medicines',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
         ),
 
         // Solid fallback prevents a native black window from ever showing.
@@ -50,10 +47,7 @@ class MedicineManagementPage extends ConsumerWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF1769D8),
-                Color(0xFF10BEB1),
-              ],
+              colors: [Color(0xFF1769D8), Color(0xFF10BEB1)],
             ),
           ),
         ),

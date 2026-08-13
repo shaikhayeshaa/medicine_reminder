@@ -5,9 +5,7 @@ import '../repositories/medicine_repository.dart';
 class GetMedicineByIdUseCase {
   final MedicineRepository repository;
 
-  const GetMedicineByIdUseCase({
-    required this.repository,
-  });
+  const GetMedicineByIdUseCase({required this.repository});
 
   Future<MedicineEntity?> call(String medicineId) {
     return repository.getMedicineById(medicineId);

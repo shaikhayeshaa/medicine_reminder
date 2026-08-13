@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/presentation/widgets/glass_surface.dart';
 import '../../../medicine/domain/entities/dose_occurrence_entity.dart';
+import '../../../medicine/domain/utils/occurrence_search.dart';
 import '../providers/dashboard_date_provider.dart';
 import '../providers/dashboard_occurrences_provider.dart';
 import 'medicine_occurrence_card.dart';
@@ -33,23 +34,9 @@ class _DashboardOccurrenceListState
     List<DoseOccurrenceEntity> occurrences,
     String query,
   ) {
-    final normalized = query.trim().toLowerCase();
-
-    if (normalized.isEmpty) {
-      return occurrences;
-    }
-
-    return occurrences.where((occurrence) {
-      return occurrence.medicineName
-              .toLowerCase()
-              .contains(normalized) ||
-          occurrence.medicineDescription
-              .toLowerCase()
-              .contains(normalized) ||
-          occurrence.medicineType
-              .toLowerCase()
-              .contains(normalized);
-    }).toList();
+    return occurrences
+        .where((occurrence) => occurrenceMatchesSearch(occurrence, query))
+        .toList();
   }
 
   bool _isToday(DateTime date) {
@@ -67,9 +54,7 @@ class _DashboardOccurrenceListState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isToday(selectedDate)
-              ? "Today's medicines"
-              : 'Scheduled medicines',
+          _isToday(selectedDate) ? "Today's medicines" : 'Scheduled medicines',
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 12),
@@ -108,8 +93,7 @@ class _DashboardOccurrenceListState
         const SizedBox(height: 14),
         Consumer(
           builder: (context, ref, child) {
-            final occurrencesAsync =
-                ref.watch(dashboardOccurrencesProvider);
+            final occurrencesAsync = ref.watch(dashboardOccurrencesProvider);
 
             return occurrencesAsync.when(
               loading: () => const _LoadingState(),
@@ -136,9 +120,7 @@ class _DashboardOccurrenceListState
                             occurrence: occurrence,
                             onTap: () {
                               context.push(
-                                AppRoutes.reminderPath(
-                                  occurrence.id,
-                                ),
+                                AppRoutes.reminderPath(occurrence.id),
                               );
                             },
                           ),
@@ -196,15 +178,9 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 42,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surface
-            .withValues(alpha: 0.72),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(26),
       ),
       child: Column(
@@ -223,14 +199,9 @@ class _EmptyState extends StatelessWidget {
           Text(
             'Add a medicine or choose another date.',
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant,
-                ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

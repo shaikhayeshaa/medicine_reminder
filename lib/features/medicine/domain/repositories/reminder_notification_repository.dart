@@ -18,7 +18,6 @@ abstract class ReminderNotificationRepository {
     String soundId = 'default_alarm',
   });
 
-
   /// Repairs the operating-system queue to exactly match the desired future
   /// occurrences. Implementations should remove stale requests and avoid
   /// duplicate notifications.

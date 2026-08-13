@@ -6,22 +6,16 @@ class SkipDoseUseCase {
   final MedicineRepository repository;
   final DateTime Function() now;
 
-  SkipDoseUseCase({
-    required this.repository,
-    DateTime Function()? now,
-  }) : now = now ?? DateTime.now;
+  SkipDoseUseCase({required this.repository, DateTime Function()? now})
+    : now = now ?? DateTime.now;
 
-  Future<DoseOccurrenceEntity> call(
-    DoseOccurrenceEntity occurrence,
-  ) async {
+  Future<DoseOccurrenceEntity> call(DoseOccurrenceEntity occurrence) async {
     final updated = occurrence.copyWith(
       status: DoseStatus.skipped,
       actionAt: now(),
     );
 
-    await repository.updateDoseOccurrence(
-      updated,
-    );
+    await repository.updateDoseOccurrence(updated);
 
     return updated;
   }

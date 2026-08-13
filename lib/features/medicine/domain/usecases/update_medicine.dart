@@ -27,8 +27,7 @@ class UpdateMedicineUseCase {
 
     // Read the old schedule before changing anything so its OS notifications
     // can be cancelled by the presentation/application layer.
-    final existingOccurrences =
-        await repository.getDoseOccurrencesByMedicineId(
+    final existingOccurrences = await repository.getDoseOccurrencesByMedicineId(
       updatedMedicine.id,
     );
 
@@ -36,8 +35,7 @@ class UpdateMedicineUseCase {
         .where(
           (occurrence) =>
               occurrence.status == DoseStatus.pending &&
-              !_effectiveTime(occurrence)
-                  .isBefore(currentTime),
+              !_effectiveTime(occurrence).isBefore(currentTime),
         )
         .toList();
 
@@ -52,9 +50,7 @@ class UpdateMedicineUseCase {
     );
 
     if (!updatedMedicine.isActive) {
-      return MedicineScheduleChangeResult(
-        cancelledOccurrences: futurePending,
-      );
+      return MedicineScheduleChangeResult(cancelledOccurrences: futurePending);
     }
 
     final generationEnd = _generationEnd(
@@ -64,9 +60,7 @@ class UpdateMedicineUseCase {
 
     // Treatment already completed.
     if (generationEnd == null) {
-      return MedicineScheduleChangeResult(
-        cancelledOccurrences: futurePending,
-      );
+      return MedicineScheduleChangeResult(cancelledOccurrences: futurePending);
     }
 
     final generated = generateOccurrences(
@@ -83,11 +77,8 @@ class UpdateMedicineUseCase {
     );
   }
 
-  DateTime _effectiveTime(
-    DoseOccurrenceEntity occurrence,
-  ) {
-    return occurrence.snoozedUntil ??
-        occurrence.scheduledAt;
+  DateTime _effectiveTime(DoseOccurrenceEntity occurrence) {
+    return occurrence.snoozedUntil ?? occurrence.scheduledAt;
   }
 
   /// Bounded medicines generate only until their end date.
@@ -118,8 +109,6 @@ class UpdateMedicineUseCase {
       from.year,
       from.month,
       from.day,
-    ).add(
-      const Duration(days: 29),
-    );
+    ).add(const Duration(days: 29));
   }
 }

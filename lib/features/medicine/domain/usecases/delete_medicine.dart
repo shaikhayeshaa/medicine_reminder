@@ -10,18 +10,13 @@ class DeleteMedicineUseCase {
   final MedicineRepository repository;
   final DateTime Function() now;
 
-  DeleteMedicineUseCase({
-    required this.repository,
-    DateTime Function()? now,
-  }) : now = now ?? DateTime.now;
+  DeleteMedicineUseCase({required this.repository, DateTime Function()? now})
+    : now = now ?? DateTime.now;
 
-  Future<List<DoseOccurrenceEntity>> call(
-    String medicineId,
-  ) async {
+  Future<List<DoseOccurrenceEntity>> call(String medicineId) async {
     final currentTime = now();
 
-    final occurrences =
-        await repository.getDoseOccurrencesByMedicineId(
+    final occurrences = await repository.getDoseOccurrencesByMedicineId(
       medicineId,
     );
 
@@ -29,9 +24,9 @@ class DeleteMedicineUseCase {
         .where(
           (occurrence) =>
               occurrence.status == DoseStatus.pending &&
-              !(occurrence.snoozedUntil ??
-                      occurrence.scheduledAt)
-                  .isBefore(currentTime),
+              !(occurrence.snoozedUntil ?? occurrence.scheduledAt).isBefore(
+                currentTime,
+              ),
         )
         .toList();
 

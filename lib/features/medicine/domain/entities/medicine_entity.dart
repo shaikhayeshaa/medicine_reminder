@@ -28,5 +28,4 @@ class MedicineEntity {
   });
 }
 
- // nullable enddate as per requirements
- 
+// nullable enddate as per requirements

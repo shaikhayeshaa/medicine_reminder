@@ -1,6 +1,1 @@
-enum DoseStatus {
-  pending,
-  taken,
-  missed,
-  skipped,
-}
+enum DoseStatus { pending, taken, missed, skipped }

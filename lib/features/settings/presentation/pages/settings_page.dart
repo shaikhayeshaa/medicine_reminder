@@ -20,9 +20,7 @@ class SettingsPage extends ConsumerWidget {
         child: SafeArea(
           bottom: false,
           child: settingsAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(),
-            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stackTrace) => _SettingsErrorState(
               onRetry: () {
                 ref.invalidate(settingsControllerProvider);
@@ -30,25 +28,18 @@ class SettingsPage extends ConsumerWidget {
             ),
             data: (settings) {
               return ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  18,
-                  18,
-                  18,
-                  150,
-                ),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 150),
                 children: [
                   const PageHeader(
                     eyebrow: 'Personalize',
                     title: 'Settings',
-                    subtitle:
-                        'Choose how reminders sound, feel, and snooze.',
+                    subtitle: 'Choose how reminders sound, feel, and snooze.',
                   ),
                   const SizedBox(height: 22),
                   SettingsSectionCard(
                     icon: Icons.notifications_active_rounded,
                     title: 'Notifications',
-                    subtitle:
-                        'Allow future medicine reminder notifications.',
+                    subtitle: 'Allow future medicine reminder notifications.',
                     child: SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Medicine reminders'),
@@ -105,14 +96,11 @@ class SettingsPage extends ConsumerWidget {
                         for (final minutes in const [5, 10, 15, 30])
                           ChoiceChip(
                             label: Text('$minutes min'),
-                            selected:
-                                settings.defaultSnoozeMinutes == minutes,
+                            selected: settings.defaultSnoozeMinutes == minutes,
                             onSelected: (_) async {
                               try {
                                 await ref
-                                    .read(
-                                      settingsControllerProvider.notifier,
-                                    )
+                                    .read(settingsControllerProvider.notifier)
                                     .setDefaultSnoozeMinutes(minutes);
                               } catch (error) {
                                 if (!context.mounted) return;
@@ -134,8 +122,7 @@ class SettingsPage extends ConsumerWidget {
                         for (final option in reminderSoundOptions)
                           _SoundOptionTile(
                             option: option,
-                            selected:
-                                settings.reminderSoundId == option.id,
+                            selected: settings.reminderSoundId == option.id,
                           ),
                       ],
                     ),
@@ -149,13 +136,10 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  static void _showSaveError(
-    BuildContext context,
-    Object error,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Unable to save setting: $error')),
-    );
+  static void _showSaveError(BuildContext context, Object error) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Unable to save setting: $error')));
   }
 }
 
@@ -163,10 +147,7 @@ class _SoundOptionTile extends ConsumerWidget {
   final ReminderSoundOption option;
   final bool selected;
 
-  const _SoundOptionTile({
-    required this.option,
-    required this.selected,
-  });
+  const _SoundOptionTile({required this.option, required this.selected});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -181,9 +162,7 @@ class _SoundOptionTile extends ConsumerWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: ListTile(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         leading: Icon(
           selected
               ? Icons.check_circle_rounded

@@ -15,90 +15,59 @@ import 'dose_occurrence_revision_provider.dart';
 import 'medicine_notifier.dart';
 import 'medicine_providers.dart';
 
-final getMedicineByIdUseCaseProvider =
-    Provider<GetMedicineByIdUseCase>((ref) {
+final getMedicineByIdUseCaseProvider = Provider<GetMedicineByIdUseCase>((ref) {
   return GetMedicineByIdUseCase(
-    repository: ref.watch(
-      medicineRepositoryProvider,
-    ),
+    repository: ref.watch(medicineRepositoryProvider),
   );
 });
 
-final updateMedicineUseCaseProvider =
-    Provider<UpdateMedicineUseCase>((ref) {
+final updateMedicineUseCaseProvider = Provider<UpdateMedicineUseCase>((ref) {
   return UpdateMedicineUseCase(
-    repository: ref.watch(
-      medicineRepositoryProvider,
-    ),
-    generateOccurrences: ref.watch(
-      generateDoseOccurrencesUseCaseProvider,
-    ),
+    repository: ref.watch(medicineRepositoryProvider),
+    generateOccurrences: ref.watch(generateDoseOccurrencesUseCaseProvider),
   );
 });
 
-final deleteMedicineUseCaseProvider =
-    Provider<DeleteMedicineUseCase>((ref) {
+final deleteMedicineUseCaseProvider = Provider<DeleteMedicineUseCase>((ref) {
   return DeleteMedicineUseCase(
-    repository: ref.watch(
-      medicineRepositoryProvider,
-    ),
+    repository: ref.watch(medicineRepositoryProvider),
   );
 });
 
-final pauseMedicineUseCaseProvider =
-    Provider<PauseMedicineUseCase>((ref) {
+final pauseMedicineUseCaseProvider = Provider<PauseMedicineUseCase>((ref) {
   return PauseMedicineUseCase(
-    repository: ref.watch(
-      medicineRepositoryProvider,
-    ),
+    repository: ref.watch(medicineRepositoryProvider),
   );
 });
 
-final resumeMedicineUseCaseProvider =
-    Provider<ResumeMedicineUseCase>((ref) {
+final resumeMedicineUseCaseProvider = Provider<ResumeMedicineUseCase>((ref) {
   return ResumeMedicineUseCase(
-    repository: ref.watch(
-      medicineRepositoryProvider,
-    ),
-    generateOccurrences: ref.watch(
-      generateDoseOccurrencesUseCaseProvider,
-    ),
+    repository: ref.watch(medicineRepositoryProvider),
+    generateOccurrences: ref.watch(generateDoseOccurrencesUseCaseProvider),
   );
 });
 
-final stopMedicineUseCaseProvider =
-    Provider<StopMedicineUseCase>((ref) {
-  return StopMedicineUseCase(
-    repository: ref.watch(
-      medicineRepositoryProvider,
-    ),
-  );
+final stopMedicineUseCaseProvider = Provider<StopMedicineUseCase>((ref) {
+  return StopMedicineUseCase(repository: ref.watch(medicineRepositoryProvider));
 });
 
 /// Loads one medicine for Edit/management screens.
 final medicineByIdProvider = FutureProvider.autoDispose
-    .family<MedicineEntity?, String>(
-  (ref, medicineId) async {
-    final useCase = ref.watch(
-      getMedicineByIdUseCaseProvider,
-    );
+    .family<MedicineEntity?, String>((ref, medicineId) async {
+      final useCase = ref.watch(getMedicineByIdUseCaseProvider);
 
-    return useCase(medicineId);
-  },
-);
+      return useCase(medicineId);
+    });
 
 /// Coordinates Hive medicine changes with operating-system notifications.
 ///
 /// Business mutations live in use cases. This controller only coordinates
 /// cross-feature side effects such as cancelling/rescheduling reminders.
-class MedicineManagementController
-    extends AsyncNotifier<void> {
+class MedicineManagementController extends AsyncNotifier<void> {
   @override
   FutureOr<void> build() {}
 
-  Future<void> updateMedicine(
-    MedicineEntity medicine,
-  ) async {
+  Future<void> updateMedicine(MedicineEntity medicine) async {
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
@@ -106,21 +75,15 @@ class MedicineManagementController
           .read(updateMedicineUseCaseProvider)
           .call(medicine);
 
-      await _cancelNotifications(
-        result.cancelledOccurrences,
-      );
+      await _cancelNotifications(result.cancelledOccurrences);
 
-      await _scheduleNotifications(
-        result.createdOccurrences,
-      );
+      await _scheduleNotifications(result.createdOccurrences);
 
       _refreshAppState();
     });
   }
 
-  Future<void> deleteMedicine(
-    String medicineId,
-  ) async {
+  Future<void> deleteMedicine(String medicineId) async {
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
@@ -134,9 +97,7 @@ class MedicineManagementController
     });
   }
 
-  Future<void> pauseMedicine(
-    String medicineId,
-  ) async {
+  Future<void> pauseMedicine(String medicineId) async {
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
@@ -150,9 +111,7 @@ class MedicineManagementController
     });
   }
 
-  Future<void> resumeMedicine(
-    String medicineId,
-  ) async {
+  Future<void> resumeMedicine(String medicineId) async {
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
@@ -160,17 +119,13 @@ class MedicineManagementController
           .read(resumeMedicineUseCaseProvider)
           .call(medicineId);
 
-      await _scheduleNotifications(
-        result.createdOccurrences,
-      );
+      await _scheduleNotifications(result.createdOccurrences);
 
       _refreshAppState();
     });
   }
 
-  Future<void> stopMedicine(
-    String medicineId,
-  ) async {
+  Future<void> stopMedicine(String medicineId) async {
     state = const AsyncLoading();
 
     state = await AsyncValue.guard(() async {
@@ -195,9 +150,7 @@ class MedicineManagementController
     // Startup synchronization will repair any OS/Hive mismatch later.
     for (final occurrence in occurrences) {
       try {
-        await notificationRepository.cancelReminder(
-          occurrence.id,
-        );
+        await notificationRepository.cancelReminder(occurrence.id);
       } catch (_) {
         // Best-effort cancellation.
       }
@@ -211,9 +164,7 @@ class MedicineManagementController
       return;
     }
 
-    final settings = await ref.read(
-      settingsControllerProvider.future,
-    );
+    final settings = await ref.read(settingsControllerProvider.future);
 
     if (!settings.notificationsEnabled) {
       return;
@@ -223,11 +174,10 @@ class MedicineManagementController
       await ref
           .read(reminderNotificationRepositoryProvider)
           .scheduleReminders(
-        occurrences,
-        vibrationEnabled:
-            settings.vibrationEnabled,
-        soundId: settings.reminderSoundId,
-      );
+            occurrences,
+            vibrationEnabled: settings.vibrationEnabled,
+            soundId: settings.reminderSoundId,
+          );
     } catch (_) {
       // Data remains valid even if the OS temporarily rejects scheduling.
     }
@@ -238,17 +188,11 @@ class MedicineManagementController
     ref.invalidate(medicineNotifierProvider);
 
     // Refresh Dashboard, Reminder and History occurrence providers.
-    ref
-        .read(
-          doseOccurrenceRevisionProvider.notifier,
-        )
-        .changed();
+    ref.read(doseOccurrenceRevisionProvider.notifier).changed();
   }
 }
 
 final medicineManagementControllerProvider =
-    AsyncNotifierProvider<
-        MedicineManagementController,
-        void>(
-  MedicineManagementController.new,
-);
+    AsyncNotifierProvider<MedicineManagementController, void>(
+      MedicineManagementController.new,
+    );

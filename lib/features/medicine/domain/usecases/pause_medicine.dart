@@ -10,16 +10,11 @@ class PauseMedicineUseCase {
   final MedicineRepository repository;
   final DateTime Function() now;
 
-  PauseMedicineUseCase({
-    required this.repository,
-    DateTime Function()? now,
-  }) : now = now ?? DateTime.now;
+  PauseMedicineUseCase({required this.repository, DateTime Function()? now})
+    : now = now ?? DateTime.now;
 
-  Future<List<DoseOccurrenceEntity>> call(
-    String medicineId,
-  ) async {
-    final medicine =
-        await repository.getMedicineById(medicineId);
+  Future<List<DoseOccurrenceEntity>> call(String medicineId) async {
+    final medicine = await repository.getMedicineById(medicineId);
 
     if (medicine == null) {
       throw StateError('Medicine not found.');
@@ -31,8 +26,7 @@ class PauseMedicineUseCase {
 
     final currentTime = now();
 
-    final occurrences =
-        await repository.getDoseOccurrencesByMedicineId(
+    final occurrences = await repository.getDoseOccurrencesByMedicineId(
       medicineId,
     );
 
@@ -40,9 +34,9 @@ class PauseMedicineUseCase {
         .where(
           (occurrence) =>
               occurrence.status == DoseStatus.pending &&
-              !(occurrence.snoozedUntil ??
-                      occurrence.scheduledAt)
-                  .isBefore(currentTime),
+              !(occurrence.snoozedUntil ?? occurrence.scheduledAt).isBefore(
+                currentTime,
+              ),
         )
         .toList();
 

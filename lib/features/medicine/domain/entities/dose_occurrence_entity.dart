@@ -42,7 +42,7 @@ class DoseOccurrenceEntity {
     required this.medicineType,
     required this.medicineStrength,
   });
-  
+
   DoseOccurrenceEntity copyWith({
     DoseStatus? status,
     DateTime? actionAt,

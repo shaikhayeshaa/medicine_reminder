@@ -11,21 +11,14 @@ class GetDoseOccurrenceByIdUseCase {
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
 
-  Future<DoseOccurrenceEntity?> call(
-    String occurrenceId,
-  ) async {
-    final occurrence =
-        await repository.getDoseOccurrenceById(
-      occurrenceId,
-    );
+  Future<DoseOccurrenceEntity?> call(String occurrenceId) async {
+    final occurrence = await repository.getDoseOccurrenceById(occurrenceId);
 
     if (occurrence == null) {
       return null;
     }
 
-    final effectiveTime =
-        occurrence.snoozedUntil ??
-        occurrence.scheduledAt;
+    final effectiveTime = occurrence.snoozedUntil ?? occurrence.scheduledAt;
 
     final shouldBeMissed =
         occurrence.status == DoseStatus.pending &&
@@ -35,13 +28,9 @@ class GetDoseOccurrenceByIdUseCase {
       return occurrence;
     }
 
-    final updated = occurrence.copyWith(
-      status: DoseStatus.missed,
-    );
+    final updated = occurrence.copyWith(status: DoseStatus.missed);
 
-    await repository.updateDoseOccurrence(
-      updated,
-    );
+    await repository.updateDoseOccurrence(updated);
 
     return updated;
   }

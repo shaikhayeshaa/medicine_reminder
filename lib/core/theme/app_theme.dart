@@ -7,29 +7,31 @@ class AppTheme {
   static const Color seed = Color(0xFF5B63F6);
 
   static ThemeData light() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: seed,
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: const Color(0xFF5457E8),
-      secondary: const Color(0xFF00A98F),
-      surface: const Color(0xFFF8F8FC),
-      surfaceContainerHighest: const Color(0xFFECECF5),
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: seed,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: const Color(0xFF5457E8),
+          secondary: const Color(0xFF00A98F),
+          surface: const Color(0xFFF8F8FC),
+          surfaceContainerHighest: const Color(0xFFECECF5),
+        );
 
     return _base(scheme);
   }
 
   static ThemeData dark() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: seed,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: const Color(0xFFBFC1FF),
-      secondary: const Color(0xFF6DE5D2),
-      surface: const Color(0xFF111217),
-      surfaceContainerHighest: const Color(0xFF24252E),
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: seed,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: const Color(0xFFBFC1FF),
+          secondary: const Color(0xFF6DE5D2),
+          surface: const Color(0xFF111217),
+          surfaceContainerHighest: const Color(0xFF24252E),
+        );
 
     return _base(scheme);
   }
@@ -57,9 +59,7 @@ class AppTheme {
           fontWeight: FontWeight.w700,
           letterSpacing: -0.25,
         ),
-        titleMedium: TextStyle(
-          fontWeight: FontWeight.w700,
-        ),
+        titleMedium: TextStyle(fontWeight: FontWeight.w700),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -67,9 +67,7 @@ class AppTheme {
         color: scheme.surface.withValues(alpha: 0.88),
         shape: RoundedRectangleBorder(
           borderRadius: radius,
-          side: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.5),
-          ),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -122,51 +120,33 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(0, 48),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 13,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          side: BorderSide(
-            color: scheme.outlineVariant,
-          ),
+          side: BorderSide(color: scheme.outlineVariant),
         ),
       ),
       chipTheme: ChipThemeData(
-        side: BorderSide(
-          color: scheme.outlineVariant.withValues(alpha: 0.6),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-        ),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       ),
     );
   }

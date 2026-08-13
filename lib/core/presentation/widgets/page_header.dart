@@ -32,8 +32,11 @@ class PageHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 5),
+
           Text(
             title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: textTheme.headlineMedium,
           ),
           if (subtitle != null) ...[
@@ -49,36 +52,13 @@ class PageHeader extends StatelessWidget {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useStackedLayout =
-            trailing != null && constraints.maxWidth < 350;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: textContent()),
 
-        if (useStackedLayout) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              textContent(),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: trailing!,
-              ),
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: textContent()),
-            if (trailing != null) ...[
-              const SizedBox(width: 12),
-              trailing!,
-            ],
-          ],
-        );
-      },
+        if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+      ],
     );
   }
 }

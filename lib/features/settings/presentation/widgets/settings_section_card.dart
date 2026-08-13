@@ -47,20 +47,14 @@ class SettingsSectionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
                     if (subtitle != null) ...[
                       const SizedBox(height: 3),
                       Text(
                         subtitle!,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
