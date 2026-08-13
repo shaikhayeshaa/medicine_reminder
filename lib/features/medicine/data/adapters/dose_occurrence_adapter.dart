@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-
 import '../../domain/entities/dose_status.dart';
 import '../models/dose_occurrence_model.dart';
 

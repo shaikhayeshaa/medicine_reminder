@@ -95,4 +95,13 @@ class MedicineRepositoryImpl implements MedicineRepository {
   ) async {
     await localDataSource.deleteFutureOccurrencesForMedicine(medicineId, from);
   }
+
+  @override
+  Future<DoseOccurrenceEntity?> getDoseOccurrenceById(
+    String occurrenceId,
+  ) async {
+    final model = await localDataSource.getDoseOccurrenceById(occurrenceId);
+
+    return model?.toEntity();
+  }
 }

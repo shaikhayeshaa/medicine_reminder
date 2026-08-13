@@ -42,4 +42,28 @@ class DoseOccurrenceEntity {
     required this.medicineType,
     required this.medicineStrength,
   });
+  
+  DoseOccurrenceEntity copyWith({
+    DoseStatus? status,
+    DateTime? actionAt,
+    DateTime? snoozedUntil,
+  }) {
+    return DoseOccurrenceEntity(
+      id: id,
+      medicineId: medicineId,
+      doseId: doseId,
+      scheduledAt: scheduledAt,
+      quantity: quantity,
+      unit: unit,
+      foodInstruction: foodInstruction,
+      status: status ?? this.status,
+      actionAt: actionAt ?? this.actionAt,
+      snoozedUntil: snoozedUntil ?? this.snoozedUntil,
+      createdAt: createdAt,
+      medicineName: medicineName,
+      medicineDescription: medicineDescription,
+      medicineType: medicineType,
+      medicineStrength: medicineStrength,
+    );
+  }
 }

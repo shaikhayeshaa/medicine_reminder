@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-
 import '../../../../core/constants/hive_constants.dart';
 import '../../domain/entities/dose_status.dart';
 import '../models/dose_occurrence_model.dart';
@@ -32,6 +31,7 @@ abstract class MedicineLocalDataSource {
     String medicineId,
     DateTime from,
   );
+  Future<DoseOccurrenceModel?> getDoseOccurrenceById(String occurrenceId);
 }
 
 class MedicineLocalDataSourceImpl implements MedicineLocalDataSource {
@@ -138,5 +138,12 @@ class MedicineLocalDataSourceImpl implements MedicineLocalDataSource {
     }
 
     await _occurrencesBox.deleteAll(keysToDelete);
+  }
+
+  @override
+  Future<DoseOccurrenceModel?> getDoseOccurrenceById(
+    String occurrenceId,
+  ) async {
+    return _occurrencesBox.get(occurrenceId);
   }
 }

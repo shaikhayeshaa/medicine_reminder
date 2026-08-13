@@ -1,4 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:medicine_reminder/features/settings/data/adapters/settings_adapter.dart';
+import 'package:medicine_reminder/features/settings/data/models/settings_model.dart';
 import '../../features/medicine/data/adapters/dose_adapter.dart';
 import '../../features/medicine/data/adapters/dose_occurrence_adapter.dart';
 import '../../features/medicine/data/adapters/medicine_adapter.dart';
@@ -29,12 +31,22 @@ class HiveService {
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(DoseOccurrenceAdapter());
     }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(SettingsAdapter());
+    }
   }
 
   static Future<void> _openBoxes() async {
     await Future.wait([
       Hive.openBox<MedicineModel>(HiveConstants.medicinesBox),
       Hive.openBox<DoseOccurrenceModel>(HiveConstants.doseOccurrencesBox),
+      Hive.openBox<SettingsModel>(HiveConstants.settingsBox),
     ]);
   }
 }
+
+
+// Medicine          typeId = 0
+// Dose              typeId = 1
+// DoseOccurrence    typeId = 2
+// Settings          typeId = 3

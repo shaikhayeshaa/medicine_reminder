@@ -28,4 +28,5 @@ abstract class MedicineRepository {
     String medicineId,
     DateTime from,
   );
+  Future<DoseOccurrenceEntity?> getDoseOccurrenceById(String occurrenceId);
 }

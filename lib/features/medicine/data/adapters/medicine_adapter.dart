@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-
 import '../models/dose_model.dart';
 import '../models/medicine_model.dart';
 
